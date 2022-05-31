@@ -1,0 +1,51 @@
+sudo zypper -n up
+
+sudo reboot
+
+echo "export KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> ~/.bashrc
+echo "PATH=${PATH}:/opt/rke2/bin:/var/lib/rancher/rke2/bin/" >> ~/.bashrc && source  ~/.bashrc
+
+sudo mkdir -p  /etc/rancher/rke2/
+
+##########
+FQDN="" ## Enter your FQDN within the quotes
+##########
+
+nslookup ${FQDN}   # Should show the public IP associated with the FQDN
+
+sudo bash -c "cat <<EOF>  /etc/rancher/rke2/config.yaml
+write-kubeconfig-mode: "0644"
+tls-san:
+  - "${FQDN}"
+EOF"
+
+cat /etc/rancher/rke2/config.yaml
+
+sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="v1.20.6+rke2r1" sh -"
+
+sudo systemctl enable --now rke2-server.service
+
+
+## After RKE2 is up and running (verify with watch -c kubectl get pods -A):
+
+kubectl create namespace cattle-system## The following commands assumes the public TLS certficate, normally named fullchain.pem, exists in the local directory as tls.crt;   and the associated private key, normally named privkey.pem, exists in the local directory as tls.key.#Examine the TLS cert, if desired:openssl x509 -noout --text -in tls.crt | less
+
+kubectl -n cattle-system create secret tls tls-rancher-ingress \
+  --cert=tls.crt \
+  --key=tls.key
+
+
+# Note that helm is only available (AFAICT) in PackageHub and software.opensuse.org
+
+sudo SUSEConnect -p PackageHub/15.3/x86_64
+sudo zypper -n in helm
+
+# Alternately, you can use the rancher-stable or rancher-alpha repos, if you prefer
+
+helm repo add rancher-latest https://releases.rancher.com/server-charts/latest############################BOOTSTRAPPW="Rancher4Me"  ## Change if you'd like############################# Verify the variables before the next step:echo ${FQDN}; echo ${BOOTSTRAPPW}
+
+helm install rancher rancher-latest/rancher \
+  --namespace cattle-system \
+  --set hostname=${FQDN} \
+  --set bootstrapPassword=${BOOTSTRAPPW} \
+  --set ingress.tls.source=secret# Rancher server consists of two deployments, rancher and rancher-webhookwatch -c kubectl -n cattle-system get deploy

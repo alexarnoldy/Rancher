@@ -74,4 +74,12 @@ IMPORTANT: When creating secrets through Rancher UI, do not base64 encode the ad
 ** Deploy with `curl -sfL https://get.k3s.io | sh -`
 ** /etc/rancher/k3s/k3s.yml is the kubeconfig file
 
+== Let's Encrypt certs and certbot:
+* To update the SAN for an existing certificate: `/usr/bin/certbot certonly --cert-name rancher-demo.susealliances.com --dns-route53 -d rancher-demo.susealliances.com -d egress.susealliances.com -d samip-demo.susealliances.com`
+* NOTE:
+** Need the AWS credentials available. Exporting them with variables is pretty easy.
+** Renews the cert as well. Can only renew the cert five times per week.
+** The first SAN specified with -d is chosen as the CN in the cert, no matter what the name of the cert is.
+* https://dev.to/nabbisen/let-s-encrypt-wildcard-certificate-with-certbot-plo
+* To view the cert: `openssl x509 -noout --text -in /etc/letsencrypt/live/rancher-demo.susealliances.com/fullchain.pem | less`
  
