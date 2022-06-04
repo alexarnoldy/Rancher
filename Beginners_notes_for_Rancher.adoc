@@ -83,3 +83,11 @@ IMPORTANT: When creating secrets through Rancher UI, do not base64 encode the ad
 * https://dev.to/nabbisen/let-s-encrypt-wildcard-certificate-with-certbot-plo
 * To view the cert: `openssl x509 -noout --text -in /etc/letsencrypt/live/rancher-demo.susealliances.com/fullchain.pem | less`
  
+== Remove clusters that won't delete in the Rancher UI:
+* Must remove from two places:
+** `kubectl -n fleet-default get clusters`
+** `kubectl.exe get clusters.management.cattle.io`
+* Remove by patching the finalizers with an empty array []:
+** export EACH=""
+** `kubectl -n fleet-default patch clusters ${EACH} -p '{"metadata":{"finalizers":[]}}' --type=merge`
+** `kubectl patch clusters.management.cattle.io ${EACH} -p '{"metadata":{"finalizers":[]}}' --type=merge`
