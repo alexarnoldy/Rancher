@@ -25,22 +25,31 @@ K3s_VERSION=""          # Match the first of the first server
 ----
 
 ** Install command:
+
 ----
 curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=${K3s_VERSION} K3S_URL=https://${FIRST_SERVER_IP}:6443 K3S_TOKEN=${NODE_TOKEN} K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC='server' sh -
 ----
 
 * Install additional agents:
+
+** Set variables for next command:
+
 ----
 FIRST_SERVER_IP=""      # Private IP preferred, if available
 NODE_TOKEN=""           # From the /var/lib/rancher/k3s/server/node-token file on the first server
 K3s_VERSION=""          # Match the first of the first server
 ----
+
+** Install command:
+
 ----
 curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=${K3s_VERSION} K3S_URL=https://${FIRST_SERVER_IP}:6443 K3S_TOKEN=${NODE_TOKEN} K3S_KUBECONFIG_MODE="644" sh -
+____
 
+#### An expanded scriptable method of creating an HA K3s cluster: 
 
-.A proven method of creating an HA K3s cluster: 
 * Deploy K3s with --cluster-init to enable embedded etcd:
+
 ----
 wget https://github.com/k3s-io/k3s/releases/download/v1.20.4%2Bk3s1/k3s
 sudo mv k3s /usr/local/bin/
