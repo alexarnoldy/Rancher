@@ -96,14 +96,74 @@ CLUSTER=""	#set to --cluster-init for embedded etcd, otherwise leave blank
 curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=${K3s_VERSION} INSTALL_K3S_EXEC='server ${CLUSTER} --write-kubeconfig-mode=644 --disable local-storage' sh -s -
 ----
 
+** Make sure K3s is completely deployed: `kubectl get pods -A`
+
 ** Install Longhorn:
 
 ----
 kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml
 ----
 
+## Installing with an external database:
+
+* Set variables for next command:
+
+----
+MDB_ROOT_PASS=""
+MDB_USER_NAME=""
+MDB_USER_PASS=""
+MDB_VIP=""		# Can be host public IP, LB or Keepalived VIP
+----
+
+
+* Create containerized MariaDB with Podman:
+
+----
+sudo mkdir -p /opt/k3s-mariadb
+
+sudo podman pod create --name k3s-mariadb-pod --publish 8080:80 --publish 3306:3306
+
+sudo podman run --name k3s-mariadb --pod k3s-mariadb-pod -v /opt/k3s-mariadb:/var/lib/mysql:Z -e  MYSQL_ROOT_PASSWORD="${MDB_ROOT_PASS}" -e MYSQL_USER="${MDB_USER_NAME}" -e MYSQL_PASSWORD="${MDB_USER_PASS}" -d docker.io/library/mariadb
+----
+
+* Create k3s database and user:
+
+----
+sudo zypper in mariadb-client
+
+mariadb -h ${MDB_VIP} -u root -p${MDB_ROOT_PASS}
+
+create database k3s;
+
+grant all privileges on k3s.* to 'k3s'@'%'  identified by 'k3sPassw0rd';
+
+flush privileges;
+\q
+----
+
+* Set variables for next command:
+
+----
+K3s_VERSION=""  	# E.g. "v1.20.4+k3s1", otherwise leave blank for latest
+LOCAL_PATH_SC=""	# Set to "--disable local-storage" to disable the local-path StorageClass, otherwise leave blank
+MDB_USERNAME=""
+MDB_PASSWORD=""
+MDB_VIP=""		# If not already set, IP address or resolvable FQDN or hostname 
+----
+
+* Install command:
+
+----
+curl -sfL https://get.k3s.io | K3S_DATASTORE_ENDPOINT='mysql://${MDB_USERNAME}:${MDB_PASSWORD}@tcp(${MDB_VIP}:3306)/k3s' INSTALL_K3S_VERSION=${K3s_VERSION} INSTALL_K3S_EXEC='server --write-kubeconfig-mode=644 ${LOCAL_PATH_SC}' sh -s -
+----
+
+
+
+
+
 ## k3sup
-* Had tons of trouble creating a cluster manually. K3sup worked well
+
+* Historically, had tons of trouble creating a cluster manually. K3sup worked well
 
 * Download and install with:
 ----
