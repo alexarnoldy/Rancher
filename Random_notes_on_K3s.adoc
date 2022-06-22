@@ -93,7 +93,7 @@ CLUSTER=""	#set to --cluster-init for embedded etcd, otherwise leave blank
 ** Install command that disables local-path StorageClass:
 
 ----
-curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=${K3s_VERSION} INSTALL_K3S_EXEC='server ${CLUSTER} --write-kubeconfig-mode=644 --disable local-storage' sh -s -
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=${K3s_VERSION} INSTALL_K3S_EXEC="server ${CLUSTER} --write-kubeconfig-mode=644 --disable local-storage" sh -s -
 ----
 
 ** Make sure K3s is completely deployed: `kubectl get pods -A`
@@ -109,10 +109,11 @@ kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/depl
 * Set variables for next command:
 
 ----
-MDB_ROOT_PASS=""
-MDB_USER_NAME=""
-MDB_USER_PASS=""
+MDB_ROOT_PASSWORD=""
+MDB_K3S_USERNAME=""
+MDB_K3S_USER_PASSWORD=""
 MDB_VIP=""		# Can be host public IP, LB or Keepalived VIP
+K3S_DATABASE=""
 ----
 
 
@@ -120,25 +121,32 @@ MDB_VIP=""		# Can be host public IP, LB or Keepalived VIP
 
 ----
 sudo mkdir -p /opt/k3s-mariadb
+sudo rm -r /opt/k3s-mariadb/*		#Clean up in the case of re-creating DB pod
 
 sudo podman pod create --name k3s-mariadb-pod --publish 8080:80 --publish 3306:3306
 
-sudo podman run --name k3s-mariadb --pod k3s-mariadb-pod -v /opt/k3s-mariadb:/var/lib/mysql:Z -e  MYSQL_ROOT_PASSWORD="${MDB_ROOT_PASS}" -e MYSQL_USER="${MDB_USER_NAME}" -e MYSQL_PASSWORD="${MDB_USER_PASS}" -d docker.io/library/mariadb
+sudo podman run --name k3s-mariadb --pod k3s-mariadb-pod -v /opt/k3s-mariadb:/var/lib/mysql:Z -e  MYSQL_ROOT_PASSWORD="${MDB_ROOT_PASSWORD}" -e MYSQL_USER="${MDB_K3S_USERNAME}" -e MYSQL_PASSWORD="${MDB_K3S_USER_PASSWORD}" -d docker.io/library/mariadb
 ----
 
-* Create k3s database and user:
+* Create k3s database and user (Don't know how to pass variables into MariaDB yet):
 
 ----
 sudo zypper in mariadb-client
 
-mariadb -h ${MDB_VIP} -u root -p${MDB_ROOT_PASS}
+#mariadb -h ${MDB_VIP} -u root -p${MDB_ROOT_PASSWORD}
 
-create database k3s;
+mariadb -h ${MDB_VIP} -u root -p${MDB_ROOT_PASSWORD} -e "create database ${K3S_DATABASE};"
 
-grant all privileges on k3s.* to 'k3s'@'%'  identified by 'k3sPassw0rd';
+mariadb -h ${MDB_VIP} -u root -p${MDB_ROOT_PASSWORD} -e "grant all privileges on ${K3S_DATABASE}.* to 'k3s'@'%'  identified by 'k3sPassw0rd';"
 
-flush privileges;
-\q
+mariadb -h ${MDB_VIP} -u root -p${MDB_ROOT_PASSWORD} -e "flush privileges;"
+----
+
+** NOTE: To re-install K3s, must reconnect to the DB and run:
+
+----
+mariadb -h 172.16.240.119 -u root -ppass -e "drop database ${K3S_DATABASE};"
+mariadb -h 172.16.240.119 -u root -ppass -e "create database ${K3S_DATABASE};"
 ----
 
 * Set variables for next command:
@@ -146,15 +154,17 @@ flush privileges;
 ----
 K3s_VERSION=""  	# E.g. "v1.20.4+k3s1", otherwise leave blank for latest
 LOCAL_PATH_SC=""	# Set to "--disable local-storage" to disable the local-path StorageClass, otherwise leave blank
-MDB_USERNAME=""
-MDB_PASSWORD=""
+MDB_K3S_USERNAME=""	# If not already set, e.g. k3s, the same as the user created in MariaDB
+MDB_K3S_PASSWORD=""	# If not already set, e.g. k3sPass0rd, the same as the password created in MariaDB
+
 MDB_VIP=""		# If not already set, IP address or resolvable FQDN or hostname 
 ----
 
+* IMPORTANT: The install command below has given me trouble with all of the variable substitutions. If it fails, replace all variables with their assigned values
 * Install command:
 
 ----
-curl -sfL https://get.k3s.io | K3S_DATASTORE_ENDPOINT='mysql://${MDB_USERNAME}:${MDB_PASSWORD}@tcp(${MDB_VIP}:3306)/k3s' INSTALL_K3S_VERSION=${K3s_VERSION} INSTALL_K3S_EXEC='server --write-kubeconfig-mode=644 ${LOCAL_PATH_SC}' sh -s -
+curl -sfL https://get.k3s.io | K3S_DATASTORE_ENDPOINT="mysql://${MDB_K3S_USERNAME}:${MDB_K3S_PASSWORD}@tcp\(${MDB_VIP}:3306\)/k3s" INSTALL_K3S_VERSION=${K3s_VERSION} INSTALL_K3S_EXEC="server --write-kubeconfig-mode=644 ${LOCAL_PATH_SC}" sh -s -
 ----
 
 
