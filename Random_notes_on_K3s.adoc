@@ -146,8 +146,8 @@ mariadb -h ${MDB_VIP} -u root -p${MDB_ROOT_PASSWORD} -e "flush privileges;"
 ** NOTE: To re-install K3s, must reconnect to the DB and run:
 
 ----
-mariadb -h 172.16.240.119 -u root -ppass -e "drop database ${K3S_DATABASE};"
-mariadb -h 172.16.240.119 -u root -ppass -e "create database ${K3S_DATABASE};"
+mariadb -h ${MDB_VIP} -u root -p${MDB_ROOT_PASSWORD} -e "drop database ${K3S_DATABASE};"
+mariadb -h ${MDB_VIP} -u root -p${MDB_ROOT_PASSWORD} -e "create database ${K3S_DATABASE};"
 ----
 
 * Set variables for next command:
@@ -159,13 +159,14 @@ MDB_K3S_USERNAME=""	# If not already set, e.g. k3s, the same as the user created
 MDB_K3S_PASSWORD=""	# If not already set, e.g. k3sPass0rd, the same as the password created in MariaDB
 
 MDB_VIP=""		# If not already set, IP address or resolvable FQDN or hostname 
+K3S_DATABASE=""
 ----
 
 * IMPORTANT: The install command below has given me trouble with all of the variable substitutions. If it fails, replace all variables with their assigned values
 * Install command:
 
 ----
-curl -sfL https://get.k3s.io | K3S_DATASTORE_ENDPOINT="mysql://${MDB_K3S_USERNAME}:${MDB_K3S_PASSWORD}@tcp\(${MDB_VIP}:3306\)/k3s" INSTALL_K3S_VERSION=${K3s_VERSION} INSTALL_K3S_EXEC="server --write-kubeconfig-mode=644 ${LOCAL_PATH_SC}" sh -s -
+curl -sfL https://get.k3s.io | K3S_DATASTORE_ENDPOINT="mysql://${MDB_K3S_USERNAME}:${MDB_K3S_PASSWORD}@tcp\(${MDB_VIP}:3306\)/${K3S_DATABASE}" INSTALL_K3S_VERSION=${K3s_VERSION} INSTALL_K3S_EXEC="server --write-kubeconfig-mode=644 ${LOCAL_PATH_SC}" sh -s -
 ----
 
 * Add another server to make the cluster HA:
@@ -182,9 +183,40 @@ LOCAL_PATH_SC=""	# Match the setting of the first server, e.g. "--disable local-
 ** Install command:
 
 ----
-curl -sfL https://get.k3s.io | K3S_DATASTORE_ENDPOINT="mysql://${MDB_K3S_USERNAME}:${MDB_K3S_PASSWORD}@tcp(${MDB_VIP}:3306)/k3s_local" INSTALL_K3S_VERSION=${K3s_VERSION} K3S_TOKEN=${NODE_TOKEN} K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="server --write-kubeconfig-mode=644 ${LOCAL_PATH_SC}" sh -s -
+curl -sfL https://get.k3s.io | K3S_DATASTORE_ENDPOINT="mysql://${MDB_K3S_USERNAME}:${MDB_K3S_PASSWORD}@tcp(${MDB_VIP}:3306)/k3s" INSTALL_K3S_VERSION=${K3s_VERSION} K3S_TOKEN=${NODE_TOKEN} K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="server --write-kubeconfig-mode=644 ${LOCAL_PATH_SC}" sh -s -
 ----
 
+#### Side notes for potentially integrating Keepalived with procedures to minimize split-brain
+
+* Assumes a two node, HA K3s cluster
+** Each node has Keepalived and MariaDB running under Podman
+
+* Both instances of MariaDB replicate to each other
+* Both instances of MariaDB start and run as read-only
+
+As part of the notify_master script ( triggered when the node takes the VIP), the following command is run to verify that this node can ping the gateway. If so, then mark the local MariaDB instance as r/w:
+
+----
+#!/bin/bash
+
+MDB_VIP=$1
+NETWORK_GATEWAY=$2
+MDB_LOCAL_IP=$3
+MDB_ROOT_PASSWORD=$4
+K3S_DATABASE=$5
+
+if ping -S ${MDB_VIP} -c 10 ${NETWORK_GATEWAY}; then
+	mariadb -h ${MDB_LOCAL_IP} -u root -p${MDB_ROOT_PASSWORD} ${K3S_DATABASE} -e "SET GLOBAL read_only = 0; UNLOCK TABLES;"
+else
+	mariadb -h ${MDB_LOCAL_IP} -u root -p${MDB_ROOT_PASSWORD} ${K3S_DATABASE} -e "FLUSH TABLES WITH READ LOCK; SET GLOBAL read_only = 1;"
+fi
+----
+
+* From the keepalived.conf file (rough example):
+
+----
+  notify_master "/etc/keepalived/keepalived_master.sh 1.2.3.100 1.2.3.1 1.2.3.10 p@ssw0rD k3s
+----
 
 
 
