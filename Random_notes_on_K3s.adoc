@@ -166,8 +166,10 @@ K3S_DATABASE=""
 * Install command:
 
 ----
-curl -sfL https://get.k3s.io | K3S_DATASTORE_ENDPOINT="mysql://${MDB_K3S_USERNAME}:${MDB_K3S_PASSWORD}@tcp\(${MDB_VIP}:3306\)/${K3S_DATABASE}" INSTALL_K3S_VERSION=${K3s_VERSION} INSTALL_K3S_EXEC="server --write-kubeconfig-mode=644 ${LOCAL_PATH_SC}" sh -s -
+curl -sfL https://get.k3s.io | K3S_DATASTORE_ENDPOINT="mysql://${MDB_K3S_USERNAME}:${MDB_K3S_PASSWORD}@tcp\(${MDB_VIP}:3306\)/${K3S_DATABASE}" INSTALL_K3S_VERSION=${K3s_VERSION} INSTALL_K3S_EXEC="server --kube-controller-manager-arg=pod-eviction-timeout=80s --write-kubeconfig-mode=644 ${LOCAL_PATH_SC}" sh -s -
 ----
+
+** Note: --kube-controller-manager-arg=pod-eviction-timeout=80s allows for a two minutes Kubelet failure detection
 
 * Add another server to make the cluster HA:
 
