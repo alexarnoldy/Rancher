@@ -193,8 +193,18 @@ curl -sfL https://get.k3s.io | K3S_DATASTORE_ENDPOINT="mysql://${MDB_K3S_USERNAM
 * Assumes a two node, HA K3s cluster
 ** Each node has Keepalived and MariaDB running under Podman
 
-* Both instances of MariaDB replicate to each other
+* Instances of MariaDB use replicatation to sync entire database when one instance joins
 * Both instances of MariaDB start and run as read-only
+
+* track_script is used to create additional probes for software on the host that, if return a non-zero exit status, will cause the node to go into a fault state
+* *notify_master* script is run after a node successfully becomes the master for an IP instance or IP group
+** Can be used to run additional validation elements to prevent split-brain (see below) and potentially amnesia
+** There are also *notify_backup* and notify_fault scripts that run when those states are established
+** There is also a *notify* script that is run upon any state change
+* Doesn't seem to be a way to use keepalived to provoke repeated backups or replicate to an external instance when only one node is in the cluster
+* Another way to prevent split-brain could be to update a DNS CNAME for the VIP that shows the master node when only one node is active and the cluster name when two are active.
+** *notify_master* could be used to test-set-test the CNAME to establish which node is master
+*** The node that fails test-set-test shuts down keepalived
 
 As part of the notify_master script ( triggered when the node takes the VIP), the following command is run to verify that this node can ping the gateway. If so, then mark the local MariaDB instance as r/w:
 
@@ -208,7 +218,7 @@ MDB_ROOT_PASSWORD=$4
 K3S_DATABASE=$5
 
 if ping -S ${MDB_VIP} -c 10 ${NETWORK_GATEWAY}; then
-	mariadb -h ${MDB_LOCAL_IP} -u root -p${MDB_ROOT_PASSWORD} ${K3S_DATABASE} -e "SET GLOBAL read_only = 0; UNLOCK TABLES;"
+	mariadb -h ${MDB_LOCAL_IP} -u root -p${MDB_ROOT_PASSWORD} ${K3S_DATABASE} -e "SET GLOBAL read_only = 0; UNLOCK TABLES;"  #### Needs to provoke a full DB sync to the new backup instance
 else
 	mariadb -h ${MDB_LOCAL_IP} -u root -p${MDB_ROOT_PASSWORD} ${K3S_DATABASE} -e "FLUSH TABLES WITH READ LOCK; SET GLOBAL read_only = 1;"
 fi
@@ -220,7 +230,7 @@ fi
   notify_master "/etc/keepalived/keepalived_master.sh 1.2.3.100 1.2.3.1 1.2.3.10 p@ssw0rD k3s
 ----
 
-
+* A notify_backup script sets its own instance as RO
 
 
 ## k3sup
