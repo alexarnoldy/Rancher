@@ -60,4 +60,4 @@ node-label:
 ## Troubleshooting:
 
 * Uses the same containerd CRI socket as K3s: 
-`crictl --runtime-endpoint /run/k3s/containerd/containerd.sock ps`
+`crictl --runtime-endpoint "unix:///run/k3s/containerd/containerd.sock" ps`
