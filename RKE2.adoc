@@ -55,3 +55,9 @@ node-label:
 2. Update the /etc/rancher/rke2/config.yaml file
 3. systemctl enable --now rke2-server.service
 * export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+
+
+## Troubleshooting:
+
+* Uses the same containerd CRI socket as K3s: 
+`crictl --runtime-endpoint /run/k3s/containerd/containerd.sock ps`
