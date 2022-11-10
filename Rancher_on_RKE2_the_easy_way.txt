@@ -29,10 +29,15 @@ sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEA
 
 sudo systemctl enable --now rke2-server.service
 
+sudo chmod 424 /etc/rancher/rke2/rke2.yaml
 
 ## After RKE2 is up and running (verify with watch -c kubectl get pods -A):
 
-kubectl create namespace cattle-system## The following commands assumes the public TLS certficate, normally named fullchain.pem, exists in the local directory as tls.crt;   and the associated private key, normally named privkey.pem, exists in the local directory as tls.key.#Examine the TLS cert, if desired:openssl x509 -noout --text -in tls.crt | less
+kubectl create namespace cattle-system
+
+## The following commands assumes the public TLS certficate, normally named fullchain.pem, exists in the local directory as tls.crt;   and the associated private key, normally named privkey.pem, exists in the local directory as tls.key
+
+#Examine the TLS cert, if desired: openssl x509 -noout --text -in tls.crt | less
 
 kubectl -n cattle-system create secret tls tls-rancher-ingress \
   --cert=tls.crt \
