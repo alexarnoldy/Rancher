@@ -4,7 +4,6 @@
 ** Identify the required instancy type according to CPU and RAM capacity guidance in the "RKE Install Requirements" tab of https://rancher.com/docs/rancher/v2.x/en/installation/requirements/#hardware-requirements
 ** The Rancher server must be accessible from the Internet, thus the VPC to be used must have a configured Internet Gateway and all RKE nodes must have a publicly routable IP address
 ** SLES nodes need to be an instance type of t2.medium or larger to get built-in subscriptions
-*** Completing this deployment without a SLES subscription has not yet been attempted
 ** For the SLES registation process to complete correctly, attach a public IP address to the primary NIC when creating the instances
 *** After the nodes are booted up and ready, remove the public IP adresses, then allocate and attach Elastic IP addresses to them
 * Create two IAM policies for the control-plane RKE role and another for both etcd and worker RKE roles: https://rancher.com/docs/rke/latest/en/config-options/cloud-providers/aws/#iam-requirements
