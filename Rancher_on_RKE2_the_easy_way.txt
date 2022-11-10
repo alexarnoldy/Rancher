@@ -29,7 +29,7 @@ sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEA
 
 sudo systemctl enable --now rke2-server.service
 
-sudo chmod 424 /etc/rancher/rke2/rke2.yaml
+sudo cp /etc/rancher/rke2/rke2.yaml .kube/config
 
 ## After RKE2 is up and running (verify with watch -c kubectl get pods -A):
 
@@ -51,10 +51,23 @@ sudo zypper -n in helm
 
 # Alternately, you can use the rancher-stable or rancher-alpha repos, if you prefer
 
-helm repo add rancher-latest https://releases.rancher.com/server-charts/latest############################BOOTSTRAPPW="Rancher4Me"  ## Change if you'd like############################# Verify the variables before the next step:echo ${FQDN}; echo ${BOOTSTRAPPW}
+helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
 
-helm install rancher rancher-latest/rancher \
+############################
+BOOTSTRAPPW="Rancher4Me"  
+## Change if you'd like
+############################# 
+
+# Verify the variables before the next step: echo ${FQDN}; echo ${BOOTSTRAPPW}
+
+RANCHER_VERSION=""
+SET_DEVEL_FLAG=""     # Set to --devel for access to development features
+
+helm install rancher rancher-latest/rancher --version ${RANCHER_VERSION} ${SET_DEVEL_FLAG} \
   --namespace cattle-system \
   --set hostname=${FQDN} \
   --set bootstrapPassword=${BOOTSTRAPPW} \
-  --set ingress.tls.source=secret# Rancher server consists of two deployments, rancher and rancher-webhookwatch -c kubectl -n cattle-system get deploy
+  --set ingress.tls.source=secret
+  
+  # Rancher server consists of two deployments, rancher and rancher-webhook
+  watch -c kubectl -n cattle-system get deploy
