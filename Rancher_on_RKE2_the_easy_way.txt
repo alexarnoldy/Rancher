@@ -21,7 +21,11 @@ EOF"
 
 cat /etc/rancher/rke2/config.yaml
 
-sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="v1.20.6+rke2r1" sh -"
+## Pick a release of RKE2 from: https://github.com/rancher/rke2/releases
+
+RKE2_RELEASE=""
+
+sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" sh -"
 
 sudo systemctl enable --now rke2-server.service
 
