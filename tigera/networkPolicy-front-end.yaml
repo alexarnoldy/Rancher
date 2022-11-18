@@ -2,7 +2,7 @@ kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: front-end
-  namespace: staging
+  namespace: default
 spec:
   podSelector:
     matchLabels:
