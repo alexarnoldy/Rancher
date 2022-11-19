@@ -42,7 +42,7 @@ storageClass:
   reclaimPolicy: Delete
 
   ## volumeBindingMode can be Immediate or WaitForFirstConsumer
-  volumeBindingMode: Immediate
+  volumeBindingMode: WaitForFirstConsumer
 
 # nodePathMap is the place user can customize where to store the data on each node.
 # 1. If one node is not listed on the nodePathMap, and Kubernetes wants to create volume on it, the paths specified in
