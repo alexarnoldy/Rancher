@@ -32,7 +32,7 @@ storageClass:
 
   ## Set StorageClass as the default StorageClass
   ## Ignored if storageClass.create is false
-  defaultClass: false
+  defaultClass: true
 
   ## Set a StorageClass name
   ## Ignored if storageClass.create is false
@@ -40,6 +40,9 @@ storageClass:
 
   ## ReclaimPolicy field of the class, which can be either Delete or Retain
   reclaimPolicy: Delete
+
+  ## volumeBindingMode can be Immediate or WaitForFirstConsumer
+  volumeBindingMode: Immediate
 
 # nodePathMap is the place user can customize where to store the data on each node.
 # 1. If one node is not listed on the nodePathMap, and Kubernetes wants to create volume on it, the paths specified in
