@@ -1,7 +1,8 @@
 apiVersion: crd.projectcalico.org/v1
 kind: IPPool
 metadata:
-  name: default-ipv4-ippool
+  name: medium-ipv4-ippool
+  namespace: default
 spec:
   cidr: 192.168.0.0/16
   natOutgoing: true
