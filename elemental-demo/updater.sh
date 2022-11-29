@@ -14,22 +14,26 @@ while [ ${COUNT} -lt ${END} ]
 do 
 	echo ${COUNT} 
 	LINE=($(head "-$COUNT" inventory | tail -1))
-	echo ${LINE}
 	MACHINE=($(head "-$COUNT" machines | tail -1))
 	echo ${MACHINE}
 	SN=$(head "-$COUNT" machines | tail -1 | awk -F- '{print$6}')
+	# Rotate the inventory file to avoid duplicates
+	grep -v "${LINE[0]} " inventory > tmp-inventory
+	grep "${LINE[0]} " inventory >> tmp-inventory
+	mv tmp-inventory inventory
 	# game-cabinet-floor-coordiantes
-	kubectl -n fleet-default label machineinventory ${MACHINE} --overwrite arcade-floor-coordiantes=${LINE[0]}
+	kubectl -n fleet-default label machineinventory ${MACHINE} --overwrite game-cabinet-floor-coordiantes=${LINE[1]}
 	#echo "kubectl -n fleet-default label machineinventory ${MACHINE} --overwrite game-cabinet-floor-coordiantes=${LINE[0]}"
 	# arcade-location
-	kubectl -n fleet-default label machineinventory ${MACHINE} --overwrite arcade-location=${LINE[1]}
+	kubectl -n fleet-default label machineinventory ${MACHINE} --overwrite arcade-location=${LINE[2]}
 	#echo "kubectl -n fleet-default label machineinventory ${MACHINE} --overwrite arcade-location=${LINE[1]}"
 	# create-cluster-selector
-	kubectl -n fleet-default label machineinventory ${MACHINE} --overwrite create-cluster-selector=${LINE[2]}
+	kubectl -n fleet-default label machineinventory ${MACHINE} --overwrite create-cluster-selector=${LINE[3]}
 	#echo "kubectl -n fleet-default label machineinventory ${MACHINE} --overwrite create-cluster-selector=${LINE[2]}"
 	# serialNumber
 	kubectl -n fleet-default label machineinventory ${MACHINE} --overwrite serialNumber=${SN}
 	#echo "kubectl -n fleet-default label machineinventory ${MACHINE} --overwrite serialNumber=${SN}"
+
 	((COUNT++)) 
 done
 
