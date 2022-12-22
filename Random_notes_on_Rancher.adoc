@@ -86,10 +86,38 @@ IMPORTANT: When creating secrets through Rancher UI, do not base64 encode the ad
 == Remove clusters that won't delete in the Rancher UI:
 * Must remove from two places:
 ** `kubectl -n fleet-default get clusters`
-** `kubectl.exe get clusters.management.cattle.io`
+** `kubectl get clusters.management.cattle.io`
 * Remove by patching the finalizers with an empty array []:
 ** export EACH=""
 ** `kubectl -n fleet-default patch clusters ${EACH} -p '{"metadata":{"finalizers":[]}}' --type=merge`
 ** `kubectl patch clusters.management.cattle.io ${EACH} -p '{"metadata":{"finalizers":[]}}' --type=merge`
 * May need to log out and back in for all remnants to disappear
 * IMPORTANT: Likely can't reuse the same cluster names or collisions will occur
+
+== Upgrading Rancher server:
+
+* Back up local cluster through the UI: Rancher Backups -> Backups
+* View the current values of the installed chart: 
+
+----
+helm list -A
+helm get values -n cattle-system rancher > rancher-values.yaml
+----
+
+** Update if needed
+
+* Check the available versions: 
+** `CHART_REPO="" # One of stable, latest, or alpha`
+** `helm search repo rancher-${CHART_REPO}`
+
+* Upgrade: 
+** `CHART_VERSION="" # <chart version, not the app version>`
+
+----
+helm upgrade rancher rancher-${CHART_REPO}/rancher \
+  --namespace cattle-system \
+  --values rancher-values.yaml \
+  --version=${CHART_VERSION}
+----
+
+* Monitor with: `kubectl rollout -n cattle-system status deployment rancher`

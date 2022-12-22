@@ -1,0 +1,8 @@
+configMapGenerator:
+- name: edge-node-updater-configmap
+  options:
+    disableNameSuffixHash: true
+  files:
+  - script/inventory
+  - script/machines
+  - script/updater.sh

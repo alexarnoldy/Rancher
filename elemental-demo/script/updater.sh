@@ -3,6 +3,9 @@
 
 export KUBECONFIG=/home/opensuse/.kube/elemental.susealliances.com-local
 
+while :
+do
+
 kubectl -n fleet-default get machineinventory -l arcade-location=null --no-headers -o custom-columns=N:.metadata.name > machines
 
 COUNT=1
@@ -38,3 +41,6 @@ do
 done
 
 kubectl -n fleet-default get machineinventory --show-labels
+
+sleep 30
+done
