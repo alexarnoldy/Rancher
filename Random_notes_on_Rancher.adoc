@@ -87,10 +87,13 @@ IMPORTANT: When creating secrets through Rancher UI, do not base64 encode the ad
 * Must remove from two places:
 ** `kubectl -n fleet-default get clusters`
 ** `kubectl get clusters.management.cattle.io`
+** To associate clusters that don't have common names: ` kubectl -n fleet-default get clusters -o yaml  | grep clusterName`
+
 * Remove by patching the finalizers with an empty array []:
-** export EACH=""
-** `kubectl -n fleet-default patch clusters ${EACH} -p '{"metadata":{"finalizers":[]}}' --type=merge`
-** `kubectl patch clusters.management.cattle.io ${EACH} -p '{"metadata":{"finalizers":[]}}' --type=merge`
+** `export CLUSTERNAME=""`
+** `kubectl -n fleet-default patch clusters ${CLUSTERNAME} -p '{"metadata":{"finalizers":[]}}' --type=merge`
+*** Change cluster name, if needed: `export CLUSTERNAME=""`
+** `kubectl patch clusters.management.cattle.io ${CLUSTERNAME} -p '{"metadata":{"finalizers":[]}}' --type=merge`
 * May need to log out and back in for all remnants to disappear
 * IMPORTANT: Likely can't reuse the same cluster names or collisions will occur
 
