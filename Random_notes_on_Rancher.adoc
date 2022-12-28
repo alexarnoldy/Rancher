@@ -92,7 +92,7 @@ IMPORTANT: When creating secrets through Rancher UI, do not base64 encode the ad
 * Remove by patching the finalizers with an empty array []:
 ** `export CLUSTERNAME=""`
 ** `kubectl -n fleet-default patch clusters ${CLUSTERNAME} -p '{"metadata":{"finalizers":[]}}' --type=merge`
-*** Change cluster name, if needed: `export CLUSTERNAME=""`
+** Change cluster name, if needed: `export CLUSTERNAME=""`
 ** `kubectl patch clusters.management.cattle.io ${CLUSTERNAME} -p '{"metadata":{"finalizers":[]}}' --type=merge`
 * May need to log out and back in for all remnants to disappear
 * IMPORTANT: Likely can't reuse the same cluster names or collisions will occur
