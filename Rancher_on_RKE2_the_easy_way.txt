@@ -1,3 +1,6 @@
+## This installation assumes running on SUSE Linux Enterprise and using a TLS cert issued by a public CA, such as Let's Encrypt
+## Some small adjustments will have to be made if not meeting these two expectations
+
 sudo zypper -n up
 
 sudo reboot
@@ -29,7 +32,11 @@ sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEA
 
 sudo systemctl enable --now rke2-server.service
 
-sudo cp /etc/rancher/rke2/rke2.yaml .kube/config
+mkdir -p ~/.kube
+
+sudo cp /etc/rancher/rke2/rke2.yaml ~/.kube/config
+sudo chown -R ${USER} ~/.kube/
+export KUBECONFIG=~/.kube/config
 
 ## After RKE2 is up and running (verify with watch -c kubectl get pods -A):
 
@@ -46,10 +53,11 @@ kubectl -n cattle-system create secret tls tls-rancher-ingress \
 
 # Note that helm is only available (AFAICT) in PackageHub and software.opensuse.org
 
-sudo SUSEConnect -p PackageHub/15.3/x86_64
+source /etc/os-release
+sudo SUSEConnect -p PackageHub/${VERSION_ID}/x86_64
 sudo zypper -n in helm
 
-# Alternately, you can use the rancher-stable or rancher-alpha repos, if you prefer
+# Alternately, you could use the rancher-stable or rancher-alpha repos, if you prefer
 
 helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
 
@@ -60,7 +68,7 @@ BOOTSTRAPPW="Rancher4Me"
 
 # Verify the variables before the next step: echo ${FQDN}; echo ${BOOTSTRAPPW}
 
-RANCHER_VERSION=""
+RANCHER_VERSION=""    # CHART VERSION not APP VERSION
 SET_DEVEL_FLAG=""     # Set to --devel for access to development features
 
 helm install rancher rancher-latest/rancher --version ${RANCHER_VERSION} ${SET_DEVEL_FLAG} \
@@ -71,3 +79,5 @@ helm install rancher rancher-latest/rancher --version ${RANCHER_VERSION} ${SET_D
   
   # Rancher server consists of two deployments, rancher and rancher-webhook
   watch -c kubectl -n cattle-system get deploy
+  
+  # Log into the Rancher web UI at ${FQDN} and the user admin with a password of ${BOOTSTRAPPW}
