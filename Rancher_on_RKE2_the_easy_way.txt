@@ -36,7 +36,8 @@ mkdir -p ~/.kube
 
 sudo cp /etc/rancher/rke2/rke2.yaml ~/.kube/config
 sudo chown -R ${USER} ~/.kube/
-export KUBECONFIG=~/.kube/config
+echo "export KUBECONFIG=~/.kube/config" >> ~/.bashrc
+source ~/.bashrc
 
 ## After RKE2 is up and running (verify with watch -c kubectl get pods -A):
 
@@ -44,34 +45,40 @@ kubectl create namespace cattle-system
 
 ## The following commands assumes the public TLS certficate, normally named fullchain.pem, exists in the local directory as tls.crt;   and the associated private key, normally named privkey.pem, exists in the local directory as tls.key
 
-#Examine the TLS cert, if desired: openssl x509 -noout --text -in tls.crt | less
+Examine the TLS cert, if desired: openssl x509 -noout --text -in tls.crt | less
 
 kubectl -n cattle-system create secret tls tls-rancher-ingress \
   --cert=tls.crt \
   --key=tls.key
 
 
-# Note that helm is only available (AFAICT) in PackageHub and software.opensuse.org
+# (Now available in the containers module) Note that helm is only available (AFAICT) in PackageHub and software.opensuse.org
 
-source /etc/os-release
-sudo SUSEConnect -p PackageHub/${VERSION_ID}/x86_64
+#source /etc/os-release
+#sudo SUSEConnect -p PackageHub/${VERSION_ID}/x86_64
+
+# Install helm
 sudo zypper -n in helm
 
-# Alternately, you could use the rancher-stable or rancher-alpha repos, if you prefer
+# NOTE: Adjust the following command to use the rancher-stable or rancher-alpha repos, if you prefer:
 
 helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
 
-############################
+
+
+# Set the bootstrap password (Change if you'd like):
+
 BOOTSTRAPPW="Rancher4Me"  
-## Change if you'd like
-############################# 
 
-# Verify the variables before the next step: echo ${FQDN}; echo ${BOOTSTRAPPW}
+# Find the version of Rancher you want to install:
+helm search repo rancher-latest --versions | less
 
-RANCHER_VERSION=""    # CHART VERSION not APP VERSION
+RANCHER_CHART_VERSION=""    # CHART VERSION not APP VERSION
 SET_DEVEL_FLAG=""     # Set to --devel for access to development features
 
-helm install rancher rancher-latest/rancher --version ${RANCHER_VERSION} ${SET_DEVEL_FLAG} \
+# Verify the variables before running the helm installation: echo ${RANCHER_CHART_VERSION}; echo ${SET_DEVEL_FLAG}; echo ${FQDN}; echo ${BOOTSTRAPPW}
+
+helm install rancher rancher-latest/rancher --version ${RANCHER_CHART_VERSION} ${SET_DEVEL_FLAG} \
   --namespace cattle-system \
   --set hostname=${FQDN} \
   --set bootstrapPassword=${BOOTSTRAPPW} \
