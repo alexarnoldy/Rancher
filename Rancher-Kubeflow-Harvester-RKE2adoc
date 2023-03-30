@@ -1,0 +1,369 @@
+### Current state of this doc (03/30/23): Constant flux
+
+.Prepare RKE nodes:
+* For these tests, we used Harvester, managed through Rancher, to create a five node RKE2 cluster
+** Three VMs make up the HA control-plane and etcd:
+*** 4 vCPU, 8GB RAM, 40GB boot drive
+** Two VMs make up the workload-plane:
+*** 8 vCPU, 16GB RAM, 16GB boot drive
+* The O/S for all nodes is Minimal installation of SLES15SP1, with container registry
+* All were deployed on the same 20 core/64GB server 
+* Install and enable Docker on all nodes
+
+.Deploy the Rancher server (on the KVM host or another host/VM)
+* Can be on the same bare-metal host or elsewhere, however, better on the same host if deploying to VMs that are behind a NAT router
+* Having a LAN routable IP on the host/VM is helpful to be able to reach the web UI
+* https://rancher.com/docs/rancher/v2.x/en/quick-start-guide/deployment/quickstart-manual-setup/
+
+.Prepare NFS server (used master node VM in these tests)
+* Basic NFS deployment
+* Can use `sudo showmount -e` on the server to verify its serving and `sudo showmount -e <NFS server IP>` from the worker nodes to verify they have everything needed to mount
+
+.Create a cluster through the Rancher UI
+* Tried not to reuse cluster names between attempts to avoid unexpected conflicts
+* Verify compatability between the Kubeflow version and the K8s version: https://www.kubeflow.org/docs/started/k8s/overview/
+** As of early Fall 2020, v1.0.2 seems to be the best with K8s >= v1.15
+* Use the "From existing nodes (Custom)" option
+* Leave "Cloud Provider" set to None
+* Under Advanced Options:
+** Disable Nginx ingress
+** Enable Pod Security Policies Support 
+*** Select the unrestricted Default Pod Security Policy
+* On the next screen, select "etcd" and "Control Plane" (deselect the "Worker" option) 
+** Copy the docker run command and paste it onto the command line of the Master VM
+** Click Done and wait for cluster to show green "Active"
+* Select the "Edit" option from the right side of the cluster line 
+** Deploy Rancher agent container with the Worker option on  the worker node VMs
+** Click Save and wait for cluster to show green "Active"
+* From top menu bar, point to "Global" or the cluster name, then select the cluster name just below it
+* Select the "Kubeconfig File" button
+** Copy the configuration into the ${HOME}/.kube/config file on a server with kubectl installed
+
+.Deploy nfs-client-provisioner from Helm catalog
+* From top menu bar, point to "Global" or the cluster name, then point to the cluster name just below it, then select "Default" project
+* From top menu bar, select "Apps", then select "Launch"
+* Search for "nfs-client-provisioner", then select it
+** Under "Answers", paste the following into the first "Variable" answer box:
+----
+nfs.server=IPAddress
+nfs.path=FullyQualifiedPath
+storageClass.name=nfs
+storageClass.defaultClass=true
+----
+*** Replace "IPAddress" with the hostname or IP address of the NFS server (RKE master node in these tests)
+*** Replace "FullyQualifiedPath" with the fully qualified path of the NFS share
+* Select "Launch" at the bottom of the page
+
+.Deploy MetalLB load balancer from the kubectl server
+
+
+* Pull and apply the MetalLB manifests
+----
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.12.1/manifests/namespace.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.12.1/manifests/metallb.yaml
+# On first install only
+kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+----
+
+NOTE: It can be useful to configure MetalLB with at least one IP address that will not be auto-assigned and then specify that IP address for a critical service that should not be allowed to lose its external IP address to external DNS mapping.
+
+* Set at least the default IP range and, optionally, the reserved IP range that will not be auto-assigned (Note that IP ranges can also be defined by CIDR notation. Adjust these variables and the configmap file as needed.)
+----
+export DEFAULT_IP_RANGE_START=
+export DEFAULT_IP_RANGE_END=
+export RESERVED_IP_RANGE_START=
+export RESERVED_IP_RANGE_END=
+----
+
+* Create the MetalLB configuration file for layer 2 routing. See https://metallb.universe.tf/configuration/ for other routing options and https://raw.githubusercontent.com/google/metallb/v0.9.3/manifests/example-config.yaml for lots of configuration options
+----
+cat <<EOF> metallb-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: metallb-system
+  name: config
+data:
+  config: |
+    address-pools:
+    - name: default
+      protocol: layer2
+      addresses:
+      - ${DEFAULT_IP_RANGE_START}-${DEFAULT_IP_RANGE_END}
+    - name: rsvd
+      protocol: layer2
+      auto-assign: false
+      addresses:
+      - ${RESERVED_IP_RANGE_START}-${RESERVED_IP_RANGE_END}
+EOF
+----
+
+* Create configmap: `kubectl apply -f metallb-config.yaml`
+* Verify the configuration was applied correctly (especially review the IP address pool): `kubectl get configmap config -n metallb-system -o yaml`
+* Verify the MetalLB load balancer is running: `kubectl get all -n metallb-system`
+
+* Test deploying a pod and service into the kubeflow namespace that picks an IP address from MetalLB (must have at least one IP not in use):
+** Create the kubeflow namespace: `kubectl create ns kubeflow`
+** Create the manifest for an nginx pod and load balancer service:
+----
+cat <<EOF> nginx-metallb-test.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1
+        ports:
+        - name: http
+          containerPort: 80
+## START: Default StorageClass PVC test
+## To disable testing PVC creation via the default StorageClass comment 
+## out all lines from here through "## END: Default StorageClass PVC test"
+        volumeMounts:
+        - mountPath: /mnt/test-vol
+          name: test-vol
+      volumes:
+      - name: test-vol
+        persistentVolumeClaim:
+          claimName: nginx-pvc
+
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nginx-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+## END: Default StorageClass PVC test
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+  type: LoadBalancer
+EOF
+----
+
+NOTE: This will also test that a PVC can be created and attached to a pod by way of the default storage class. If this is not desired, comment out the appropriate lines, as described in the file.
+
+** Create the pod, service, and (optionally) the PVC: `kubectl apply -f nginx-metallb-test.yaml -n kubeflow`
+** Verify the pod is "Running", the persistentvolumeclaim is "Bound", and the service has an "EXTERNAL-IP": `kubectl get pod,pvc,svc -n kubeflow`
+** Test that the service is reachable through the load balancer IP address from outside the cluster:
+
+----
+IPAddr=$(kubectl get svc -n kubeflow | grep -w nginx | awk '{print$4":"$5}' | awk -F: '{print$1":"$2}')
+curl http://${IPAddr}
+----
+
+*** An HTML encoded output should be displayed that includes the phrase "Thank you for using nginx."
+
+* When finished with testing, delete the pod and service: `kubectl delete -f nginx-metallb-test.yaml -n kubeflow`
+
+===== Enable Istio
+
+NOTE: This guide assumes Istio was installed when the RKE cluster was instantiated. 
+
+* Ensure the cluster name is shown in the top menu bar
+* Point to "Tools", then select "Istio"
+* Select the appropriate version (1.4.10 for these tests)
+* Under "Ingress Gateway", select "True" to enable
+* Under "Select Type of...", select "LoadBalancer"
+* Leave "Load Balancer IP" empty to allow MetalLB to assign an IP address
+** (Optionally) Provide an IP address that is assigned to MetalLB but not in use
+
+NOTE: It can be useful to configure MetalLB with at least one IP address that will not be auto-assigned and then specify that IP address for a critical service that should not be allowed to lose its external IP address to external DNS mapping.
+
+* Select "Save" at the bottom of the page
+* Wait until Istio becomes green
+* Validate the istio-ingressgateway has received an IP address: `kubectl get svc -A | egrep --color 'EXTERNAL-IP|LoadBalancer'`
+** (Optionally) Validate an external connection to an internal Istio service: 
+*** Use the curl command to connect to a few of the *PORT(S)* listed for the istio-ingressgateway, i.e. `curl http://{$IPADDR}:15020`
+*** At least one of the ports should return "404 page not found"
+
+.Prepare the Kubeflow deployment files (best done from the kubectl server)
+* Install the kfctl utility and place it in /usr/local/bin:
+----
+wget https://github.com/kubeflow/kfctl/releases/download/v1.1.0/kfctl_v1.1.0-0-g9a3621e_linux.tar.gz
+tar xvfz kfctl_v1.1.0-0-g9a3621e_linux.tar.gz 
+sudo mv kfctl /usr/local/bin
+kfctl version
+----
+
+* Configure the following variables (adjust as needed)
+----
+export KF_NAME=kubeflow-deployment
+export BASE_DIR=${HOME}
+export KF_DIR=${BASE_DIR}/${KF_NAME}
+export CONFIG_URI="${KF_DIR}/kfctl_k8s_istio.v1.0.2.yaml"
+----
+
+* Create and enter the ~/kubeflow-deployment directory: `mkdir -p ${KF_DIR} && cd ${KF_DIR}`
+* Download the kfctl.yaml config file: `wget https://raw.githubusercontent.com/kubeflow/manifests/v1.0-branch/kfdef/kfctl_k8s_istio.v1.0.2.yaml`
+* The following section of the kfctl_k8s_istio.v1.0.2.yaml manifest will install and enable Istio
+** If Istio is installed and enabled, comment out the following lines, near the top of the kfctl_k8s_istio.v1.0.2.yaml file
+----
+  - kustomizeConfig:
+      parameters:
+      - name: namespace
+        value: istio-system
+      repoRef:
+        name: manifests
+        path: istio/istio-crds
+    name: istio-crds
+  - kustomizeConfig:
+      parameters:
+      - name: namespace
+        value: istio-system
+      repoRef:
+        name: manifests
+        path: istio/istio-install
+    name: istio-install
+----
+
+* Download the Kubeflow build files: `kfctl build -V -f ${CONFIG_URI}`
+
+===== Create a new pod security policy to support Kubeflow
+
+NOTE: This section assumes there is not an adequate pod security policy available in the cluster and/or the user needs help in configuring one. The PSP created here is the most privileged and the least secure PSP possible. Use at your own risk.
+
+* Create the PSP manifest file:
+----
+cat <<EOF> kubeflow-privileged-psp.yaml
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
+  name: kubeflow-privileged-psp
+spec:
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+  - '*'
+  fsGroup:
+    rule: RunAsAny
+  hostIPC: true
+  hostNetwork: true
+  hostPID: true
+  hostPorts:
+  - max: 65535
+    min: 0
+  privileged: true
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+  - '*'
+EOF
+----
+
+* Create the new PSP: `kubectl apply -f kubeflow-privileged-psp.yaml`
+
+.Update the kubeflow-edit and kubeflow-admin cluster roles in the cluster-roles.yaml manifest file to use the new PSP
+
+////
+* Create an aggregated cluster role file that will update the cluster roles during installation:
+
+----
+cat <<EOF> psp-update-kubeflow-edit-kubeflow-admin.yaml
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp-update-kubeflow-edit-kubeflow-admin
+  labels:
+    rbac.authorization.kubeflow.org/aggregate-to-kubeflow-admin: "true"
+    rbac.authorization.kubeflow.org/aggregate-to-kubeflow-edit: "true"
+rules:
+- apiGroups:
+  - policy
+  resourceNames:
+  - kubeflow-privileged-psp
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use
+EOF
+----
+* Save a copy of the kustomize/kubeflow-roles/base/cluster-roles.yaml file: `cp -p kustomize/kubeflow-roles/base/cluster-roles.yaml /tmp/`
+* Append the psp-update-kubeflow-edit-kubeflow-admin.yaml file to the end of the kustomize/kubeflow-roles/base/cluster-roles.yaml file: `cat psp-update-kubeflow-edit-kubeflow-admin.yaml >> kustomize/kubeflow-roles/base/cluster-roles.yaml`
+* Verify the changes: `diff kustomize/kubeflow-roles/base/cluster-roles.yaml /tmp/cluster-roles.yaml`
+////
+
+* Save a copy of the kustomize/kubeflow-roles/base/cluster-roles.yaml file: `cp -p kustomize/kubeflow-roles/base/cluster-roles.yaml /tmp/`
+* Edit the kustomize/kubeflow-roles/base/cluster-roles.yaml file
+** Search for kubeflow-kubernetes-admin 
+
+NOTE: Ensure the "resourceNames" refers to the correct PSP to be used.
+
+** Insert the following lines under the "rules:" section of the kubeflow-kubernetes-admin ClusterRole:
+----
+- apiGroups:
+  - policy
+  resourceNames:
+  - kubeflow-privileged-psp
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use
+----
+** Search for kubeflow-kubernetes-edit 
+** Insert the same lines under the "rules:" section of the kubeflow-kubernetes-edit ClusterRole
+** Save and close the file
+* Verify that only the intended changes were made to the file: `diff kustomize/kubeflow-roles/base/cluster-roles.yaml /tmp/cluster-roles.yaml`
+
+.Deploy Kubeflow
+
+* Ensure these variables are still set correctly:
+----
+echo ${KF_NAME}
+echo ${BASE_DIR}
+echo ${KF_DIR}
+echo ${CONFIG_URI}
+----
+
+* Start the deployment: `kfctl apply -V -f ${CONFIG_URI}`
+
+* From another terminal, use the following command to monitor the kubeflow deployment: `watch 'kubectl get pods -A | egrep -v "Completed|Running"'`
+
+** Over time, the number of pods that are in a state of `ContainerCreating` should decrease.
+
+.Connect to the Kubeflow web UI
+
+* Use the follow command to find the load balancer IP address (under EXTERNAL-IP) to connect to the Kubeflow UI: `kubectl get svc -n istio-system | egrep 'EXTERNAL-IP|LoadBalancer'`
+* Connect to the Kubeflow UI through a web browser pointed to the external IP address on port 80
+
+NOTE: During the first, successful test it took several hours for all of the deployments to deploy their pods. I really thought it was one of the worst failures to date, but many hours later I discovered virtually everything deployed correctly.
+
+IMPORTANT: On every attempt at least one pod had not deployed correctly. If there are only a few, or less, Navigate to "Workloads" in the "Default Project" and delete one, wait for it to re-deploy correctly, then move on to the next one. It can take several minutes for each pod to finish re-deploying correctly.
+
+CAUTION: I am still experiencing a situation where the kubeflow-edit cluster role loses the entries for the pod security policy that is assigned to it in the ~/kubeflow-deployment/kustomize/kubeflow-edit.yaml file. The result is that Jupyter Notebook can't deploy servers due to lack of a compatible PSP. 
