@@ -1,19 +1,19 @@
 ### Current state of this doc (03/30/23): Constant flux
 
-.Prepare RKE nodes:
+
+IMPORTANT: This guide assumes Rancher Management Server is installed and configured with Harvester under Rancher management.
+
+.Prepare the RKE2 Kubernetes cluster
 * For these tests, we used Harvester, managed through Rancher, to create a five node RKE2 cluster
 ** Three VMs make up the HA control-plane and etcd:
 *** 4 vCPU, 8GB RAM, 40GB boot drive
 ** Two VMs make up the workload-plane:
 *** 8 vCPU, 16GB RAM, 16GB boot drive
-* The O/S for all nodes is Minimal installation of SLES15SP1, with container registry
-* All were deployed on the same 20 core/64GB server 
-* Install and enable Docker on all nodes
+* The operating systems for all nodes is the SUSE Linux Enterprise 15 SP4 minimal QCOW2 image with cloud-init enabled (previously known as the OpenStack image)
+* All operating system software was patched to the latest update
+* The open-iscsi software package was installed on all nodes
+* The kernel-default-base kernel was replaced with kernel-default
 
-.Deploy the Rancher server (on the KVM host or another host/VM)
-* Can be on the same bare-metal host or elsewhere, however, better on the same host if deploying to VMs that are behind a NAT router
-* Having a LAN routable IP on the host/VM is helpful to be able to reach the web UI
-* https://rancher.com/docs/rancher/v2.x/en/quick-start-guide/deployment/quickstart-manual-setup/
 
 .Prepare NFS server (used master node VM in these tests)
 * Basic NFS deployment
