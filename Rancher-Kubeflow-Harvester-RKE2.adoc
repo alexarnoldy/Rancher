@@ -5,9 +5,9 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 
 .Prepare the RKE2 Kubernetes cluster
 * For these tests, we used Harvester, managed through Rancher, to create a five node RKE2 cluster
-** Three VMs make up the HA control-plane and etcd:
+** Three VMs make up the HA control-plane and etcd pool:
 *** 4 vCPU, 8GB RAM, 40GB boot drive
-** Two VMs make up the workload-plane:
+** Two VMs make up the workload-plane pool:
 *** 8 vCPU, 16GB RAM, 16GB boot drive
 * The operating systems for all nodes is the SUSE Linux Enterprise 15 SP4 minimal QCOW2 image with cloud-init enabled (previously known as the OpenStack image)
 * All operating system software was patched to the latest update
@@ -15,9 +15,14 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 * The kernel-default-base kernel was replaced with kernel-default
 
 
+////
 .Prepare NFS server (used master node VM in these tests)
 * Basic NFS deployment
 * Can use `sudo showmount -e` on the server to verify its serving and `sudo showmount -e <NFS server IP>` from the worker nodes to verify they have everything needed to mount
+////
+
+.Install Longhorn CSI on Kubernetes cluster
+
 
 .Create a cluster through the Rancher UI
 * Tried not to reuse cluster names between attempts to avoid unexpected conflicts
