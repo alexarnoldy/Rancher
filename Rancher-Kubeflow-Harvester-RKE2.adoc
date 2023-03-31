@@ -5,15 +5,41 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 
 .Prepare the RKE2 Kubernetes cluster
 * For these tests, we used Harvester, managed through Rancher, to create a five node RKE2 cluster
+* A project in Harvester named kubeflow-on-harvester contains a namespace named kubeflow-cluster
 ** Three VMs make up the HA control-plane and etcd pool:
 *** 4 vCPU, 8GB RAM, 40GB boot drive
 ** Two VMs make up the workload-plane pool:
 *** 8 vCPU, 16GB RAM, 16GB boot drive
+* All nodes are connected to a single VLAN with routing to the Internet
 * The operating systems for all nodes is the SUSE Linux Enterprise 15 SP4 minimal QCOW2 image with cloud-init enabled (previously known as the OpenStack image)
 * All operating system software was patched to the latest update
 * The open-iscsi software package was installed on all nodes
 * The kernel-default-base kernel was replaced with kernel-default
+* Kubernetes version v1.24.9+rke2r2
+* Enable the Harvester Cloud Provider CSI driver
+* A cluster label of `app=kubeflow` was applied to the RKE2 cluster
 
+* The following User Data cloud-config was applied to all nodes during RKE2 cluster creation:
+----
+### cloud-init
+#cloud-config
+chpasswd:
+  list: |
+    root:SUSE
+    sles:SUSE
+  expire: false
+ssh_authorized_keys:
+  - >-
+    ssh-rsa
+    AAAAB3NzaC1yc2EAAAADAQABAAABgQDIm3NGmcOVMqEVHmuDX6+PA3miBn20nrfkD+nYwWTtkdphTh28ZhRhFWX21/orflg93GwGk4ExE+5L0wqxBhc0wc7udmzc8HlMk6fypbmxCO6W0QB9tLOnFDiENLNetk7sKfEEKHldEWpFzJ0szUTF5x8HbzIlvbvKaRpzJfB5WvQGwx9uhFF6HFzlHVfdZGjZ2xLkZ5D3ybdqeH27eelXxl7qKP7GGaLC/39xu3iEkoxbuKzZPyJFpNnh1CLS8lks6+R+U3+d4mnW0TFu/bWLhZjne55yYCi4qnMb5QB1/sNQwXiBFlTUDzlJ9TTS0bMHRdBsokkZQU53l0pddZPcf4HATht5sE05x/1vtcTbaUZE8KUeE4IOJinF3ZQnh1q/OHEr98iTyquOA8X7ehdg7MoDbJ0rcpRWZPNzoae8IxOBMDKek6J5d1ATepOraJtK2yRtXbq68wRPEfQNIHPIcZcMWc5ZeKf7mk2p2O4Gv3c2q3chgpxLpnuLTJvwb30=
+    opensuse@opensuse-desktop
+runcmd:
+  - SUSEConnect --url http://rmt.example.com
+  - zypper -n in -t pattern apparmor
+  - zypper -n up
+  - zypper in --force-resolution --no-confirm --force kernel-default
+  - zypper rm kernel-default-base
+----
 
 ////
 .Prepare NFS server (used master node VM in these tests)
