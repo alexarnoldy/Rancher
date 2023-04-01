@@ -1,7 +1,9 @@
 #!/bin/bash
 ##
 
-## Functions
+#
+## BEGIN Functions
+
 func_delete_cluster () {
 cat <<EOF | at now +10 minutes
 curl 'https://rancher-demo.susealliances.com/v1/provisioning.cattle.io.clusters/fleet-default/${CLUSTER_NAME}' \
@@ -24,37 +26,64 @@ curl 'https://rancher-demo.susealliances.com/v1/provisioning.cattle.io.clusters/
 EOF
 }
 
+func_create_rke2_cluster () {
+## Render the correct command to create the *Config resource (k api-resources | grep -i rke-machine-config   to see all)
+
+cat curl-commands/create_${PLATFORM}config.curl | sed "s/TOKEN/${TOKEN}/g" | sed "s/CLUSTER_NAME/${CLUSTER_NAME}/g" > /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
+
+## Create the *Config resource
+bash /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
+
+## Get the name of the *Config resource
+kubectl config use-context rancher-demo
+POOL_NAME=$(kubectl get ${PLATFORM}config.rke-machine-config.cattle.io -n fleet-default | grep nc-${CLUSTER_NAME}-pool1 | awk '{print$1}')
+
+## Create the cluster resource
+cat curl-commands/create_${PLATFORM}_rke2_cluster.curl | sed "s/TOKEN/${TOKEN}/g" | sed "s/CLUSTER_NAME/${CLUSTER_NAME}/g" | sed "s/POOL_NAME/${POOL_NAME}/g" > /tmp/${PLATFORM}-${CLUSTER_NAME}-cluster.sh
+
+bash /tmp/${PLATFORM}-${CLUSTER_NAME}-cluster.sh
+
+sleep 5
+rm /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
+rm /tmp/${PLATFORM}-${CLUSTER_NAME}-cluster.sh
+}
+
+## END Functions
+#
 
 DATE=$(date +%m%d%H%M)
 
 CLUSTER_BASE_NAME="demo-${DATE}"
 
+## Possible platform options are: 
+# amazonec2
+# azure
+# digitalocean
+# harvester
+# linode
+# vmwarevsphere
 
 ##
 ######## Create Harvester cluster
 ##
 
-CLUSTER_NAME="${CLUSTER_BASE_NAME}-harvester"
+PLATFORM="harvester"
 
-## Render the correct command to create the harvesterConfig
+CLUSTER_NAME="${CLUSTER_BASE_NAME}-${PLATFORM}"
 
-cat curl-commands/create_HarvesterConfig.curl | sed "s/TOKEN/${TOKEN}/g" | sed "s/CLUSTER_NAME/${CLUSTER_NAME}/g" > /tmp/harvester-${CLUSTER_NAME}-config.sh
+func_create_rke2_cluster 
 
-## Create the harvesterConfig
-bash /tmp/harvester-${CLUSTER_NAME}-config.sh
+func_delete_cluster
 
-## Get the name of the harvesterConfig object
-kubectl config use-context rancher-demo
-POOL_NAME=$(kubectl get HarvesterConfig.rke-machine-config.cattle.io -n fleet-default | grep nc-${CLUSTER_NAME}-pool1 | awk '{print$1}')
+##
+######## Create Azure cluster
+##
 
-## Create the harvester cluster
-cat curl-commands/create_Harvester_RKE2_cluster.curl | sed "s/TOKEN/${TOKEN}/g" | sed "s/CLUSTER_NAME/${CLUSTER_NAME}/g" | sed "s/POOL_NAME/${POOL_NAME}/g" > /tmp/harvester-${CLUSTER_NAME}-cluster.sh
+PLATFORM="azure"
 
-bash /tmp/harvester-${CLUSTER_NAME}-cluster.sh
+CLUSTER_NAME="${CLUSTER_BASE_NAME}-${PLATFORM}"
 
-sleep 5
-rm /tmp/harvester-${CLUSTER_NAME}-config.sh
-rm /tmp/harvester-${CLUSTER_NAME}-cluster.sh
+func_create_rke2_cluster 
 
 func_delete_cluster
 

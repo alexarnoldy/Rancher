@@ -6,15 +6,16 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 .Prepare the RKE2 Kubernetes cluster
 * For these tests, we used Harvester, managed through Rancher, to create a five node RKE2 cluster
 * A project in Harvester named kubeflow-on-harvester contains a namespace named kubeflow-cluster
-** Three VMs make up the HA control-plane and etcd pool:
-*** 4 vCPU, 8GB RAM, 40GB boot drive
+
+.Create a cluster through the Rancher UI
+* The cluster name set to: `kubeflow-on-harvester` 
+* Three instances set with the roles of control-plane and etcd pool
+** Configure resources of 4 vCPU, 8GB RAM, 40GB boot drive
 ** Two VMs make up the workload-plane pool:
 *** 8 vCPU, 16GB RAM, 16GB boot drive
 * All nodes are connected to a single VLAN with routing to the Internet
 * The operating systems for all nodes is the SUSE Linux Enterprise 15 SP4 minimal QCOW2 image with cloud-init enabled (previously known as the OpenStack image)
 * All operating system software was patched to the latest update
-* The open-iscsi software package was installed on all nodes
-* The kernel-default-base kernel was replaced with kernel-default
 * Kubernetes version v1.24.9+rke2r2
 * Enable the Harvester Cloud Provider CSI driver
 * A cluster label of `app=kubeflow` was applied to the RKE2 cluster
@@ -47,14 +48,9 @@ runcmd:
 * Can use `sudo showmount -e` on the server to verify its serving and `sudo showmount -e <NFS server IP>` from the worker nodes to verify they have everything needed to mount
 ////
 
-.Install Longhorn CSI on Kubernetes cluster
-
+* Using Kubeflow version 1.6
 
 .Create a cluster through the Rancher UI
-* Tried not to reuse cluster names between attempts to avoid unexpected conflicts
-* Verify compatability between the Kubeflow version and the K8s version: https://www.kubeflow.org/docs/started/k8s/overview/
-** As of early Fall 2020, v1.0.2 seems to be the best with K8s >= v1.15
-* Use the "From existing nodes (Custom)" option
 * Leave "Cloud Provider" set to None
 * Under Advanced Options:
 ** Disable Nginx ingress

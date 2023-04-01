@@ -1,0 +1,20 @@
+curl 'https://rancher-demo.susealliances.com/v3/cluster?_replace=true' \
+  -H 'authority: rancher-demo.susealliances.com' \
+  -H 'accept: application/json' \
+  -H 'accept-language: en-US,en;q=0.9' \
+  -H 'content-type: application/json' \
+  -H 'cookie: R_PCS=light; R_LOCALE=en-us; R_REDIRECTED=true; CSRF=579230fcbcc0e6e8b54da2f4bd90b48d; R_SESS=TOKEN' \
+  -H 'origin: https://rancher-demo.susealliances.com' \
+  -H 'referer: https://rancher-demo.susealliances.com/g/clusters/add/launch/azureaksv2' \
+  -H 'sec-ch-ua: "Google Chrome";v="111", "Not(A:Brand";v="8", "Chromium";v="111"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36' \
+  -H 'x-api-action-links: actionLinks' \
+  -H 'x-api-csrf: 579230fcbcc0e6e8b54da2f4bd90b48d' \
+  -H 'x-api-no-challenge: true' \
+  --data-raw '{"dockerRootDir":"/var/lib/docker","enableClusterAlerting":false,"enableClusterMonitoring":false,"enableNetworkPolicy":false,"windowsPreferedCluster":false,"type":"cluster","name":"CLUSTER_NAME","aksConfig":{"imported":false,"azureCredentialSecret":"cattle-global-data:cc-dz5vb","clusterName":"CLUSTER_NAME","dnsPrefix":"CLUSTER_NAME","kubernetesVersion":"1.23.15","linuxAdminUsername":"azureuser","loadBalancerSku":"Standard","networkPlugin":"kubenet","nodePools":[{"availabilityZones":["1","2","3"],"count":1,"enableAutoScaling":false,"maxPods":110,"mode":"System","name":"agentpool","orchestratorVersion":"1.23.15","osDiskSizeGB":128,"osDiskType":"Managed","osType":"Linux","type":"aksnodepool","vmSize":"Standard_DS2_v2","isNew":true}],"privateCluster":false,"resourceGroup":"CLUSTER_NAME","resourceLocation":"westus2","tags":{},"type":"aksclusterconfigspec"},"labels":{"status":"standby"},"annotations":{}}' \
+  --compressed
