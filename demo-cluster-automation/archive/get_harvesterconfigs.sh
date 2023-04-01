@@ -1,0 +1,15 @@
+curl 'https://rancher-demo.susealliances.com/v1/rke-machine-config.cattle.io.harvesterconfigs' \
+  -H 'authority: rancher-demo.susealliances.com' \
+  -H 'accept: application/json' \
+  -H 'accept-language: en-US,en;q=0.9' \
+  -H 'cookie: R_PCS=light; R_LOCALE=en-us; R_REDIRECTED=true; CSRF=579230fcbcc0e6e8b54da2f4bd90b48d; R_SESS=TOKEN' \
+  -H 'referer: https://rancher-demo.susealliances.com/dashboard/c/local/explorer/rke-machine-config.cattle.io.harvesterconfig' \
+  -H 'sec-ch-ua: "Google Chrome";v="111", "Not(A:Brand";v="8", "Chromium";v="111"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Windows"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36' \
+  -H 'x-api-csrf: 579230fcbcc0e6e8b54da2f4bd90b48d' \
+  --compressed
