@@ -5,7 +5,7 @@
 ## BEGIN Functions
 
 func_delete_cluster () {
-cat <<EOF | at now +10 minutes
+cat <<EOF | at now +2 hours
 curl 'https://rancher-demo.susealliances.com/v1/provisioning.cattle.io.clusters/fleet-default/${CLUSTER_NAME}' \
   -X 'DELETE' \
   -H 'authority: rancher-demo.susealliances.com' \
