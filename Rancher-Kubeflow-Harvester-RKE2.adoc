@@ -6,15 +6,15 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 
 # Overall steps to complete this task
 
-1 Deploy an RKE2 cluster on Harvester
-1 Deploy the NFS server
-1 Create the NFS client Container Storage Interface (CSI) on the RKE2 cluster
-1 Deploy the MetalLB load balancer
-1 Verify MetalLB and the Longhorn CSI are working correctly
-1 Deploy Istio
-1 Prepare the Kubeflow deployment files
-1 Deploy Kubeflow
-1 Connect to the Kubeflow UI
+. Deploy an RKE2 cluster on Harvester
+. Deploy the NFS server
+. Create the NFS client Container Storage Interface (CSI) on the RKE2 cluster
+. Deploy the MetalLB load balancer
+. Verify MetalLB and the Longhorn CSI are working correctly
+. Deploy Istio
+. Prepare the Kubeflow deployment files
+. Deploy Kubeflow
+. Connect to the Kubeflow UI
 
 .Prepare the RKE2 Kubernetes cluster
 * For these tests, we used Harvester, managed through Rancher, to create a five node RKE2 cluster
