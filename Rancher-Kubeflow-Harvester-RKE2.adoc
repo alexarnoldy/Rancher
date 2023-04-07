@@ -27,7 +27,7 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 * Three instances set with the roles of control-plane and etcd pool
 ** Configure resources of 4 vCPU, 8GB RAM, 40GB boot drive
 ** Two VMs make up the workload-plane pool:
-*** 8 vCPU, 16GB RAM, 16GB boot drive
+*** 8 vCPU, 16GB RAM, 40GB boot drive
 * All nodes should be in the same Harvester namespace
 * The operating systems for all nodes is the SUSE Linux Enterprise 15 SP4 minimal QCOW2 image with cloud-init enabled (previously known as the OpenStack image)
 * All nodes are connected to a single VLAN with DHCP, DNS, and routing to the Internet

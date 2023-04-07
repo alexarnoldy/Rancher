@@ -45,11 +45,15 @@ func_create_rke2_cluster () {
 cat curl-commands/create_${PLATFORM}config.curl | sed "s/TOKEN/${TOKEN}/g" | sed "s/CLUSTER_NAME/${CLUSTER_NAME}/g" > /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
 
 ## Create the *Config resource
-bash /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
+POOL_NAME=$(bash /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh | jq '.id' | sed 's/\"//g' | awk -F\/ '{print$2}')
 
-## Get the name of the *Config resource
-kubectl config use-context rancher-demo
-POOL_NAME=$(kubectl get ${PLATFORM}config.rke-machine-config.cattle.io -n fleet-default | grep nc-${CLUSTER_NAME}-pool1 | awk '{print$1}')
+
+##### No longer needed
+#bash /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
+### Get the name of the *Config resource
+#kubectl config use-context rancher-demo
+#POOL_NAME=$(kubectl get ${PLATFORM}config.rke-machine-config.cattle.io -n fleet-default | grep nc-${CLUSTER_NAME}-pool1 | awk '{print$1}')
+##### No longer needed
 
 ## Create the cluster resource
 cat curl-commands/create_${PLATFORM}_rke2_cluster.curl | sed "s/TOKEN/${TOKEN}/g" | sed "s/CLUSTER_NAME/${CLUSTER_NAME}/g" | sed "s/POOL_NAME/${POOL_NAME}/g" > /tmp/${PLATFORM}-${CLUSTER_NAME}-cluster.sh
