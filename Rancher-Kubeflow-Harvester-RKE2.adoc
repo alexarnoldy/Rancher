@@ -16,7 +16,7 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 . Deploy Kubeflow
 . Connect to the Kubeflow UI
 
-# Steps that are currently in flux
+# Steps that are currently in moderate flux
 
 .Prepare the RKE2 Kubernetes cluster
 * For these tests, we used Harvester, managed through Rancher, to create a five node RKE2 cluster
@@ -55,7 +55,7 @@ runcmd:
 ----
 
 * The Kubernetes `Cluster Configuration` is as follows:
-** Kubernetes version v1.24.9+rke2r2 (currently depricated, but needed for fully Harvester Cloud Provider support)
+** Kubernetes version v1.24.9+rke2r2 (currently depricated, but needed for Harvester Cloud Provider support)
 ** Enable the Harvester Cloud Provider CSI driver
 ** `Container Network` Interface is Calico
 ** Set the `Default Security Pod Policy` to `unrestricted`
@@ -161,6 +161,8 @@ curl http://${IPAddr}
 *** An HTML encoded output should be displayed that includes the phrase "Thank you for using nginx."
 
 * When finished with testing, delete the pod and service: `kubectl delete -f nginx-metallb-test.yaml -n kubeflow`
+
+# Steps that are currently in extreme flux
 
 .Deploy nfs-client-provisioner from Helm catalog
 * From top menu bar, point to "Global" or the cluster name, then point to the cluster name just below it, then select "Default" project
