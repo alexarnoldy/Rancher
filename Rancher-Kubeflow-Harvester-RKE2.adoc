@@ -63,17 +63,18 @@ runcmd:
 ** Apply a cluster label of `app=kubeflow` 
 
 .Verify and reboot the RKE2 nodes
+* Verify that the `kernel-default` kernel has been installed and `kernel-default-base` kernel has been removed: `sudo zypper se kernel-default`
+** If needed, remove the `kernel-default-base` kernel with: `sudo zypper rm kernel-default-base`
 * Verify that all operating system software has been patched to the latest update: `sudo zypper up`
-* Verify that the `kernel-default` kernel has been installed and `kernel-default-base` kernel has been removed: `sudo zypper up`
 * Will need to reboot each node, in turn to enable the kernel-default kernel
 
 ////
 .Prepare NFS server (used master node VM in these tests)
 * Basic NFS deployment
 * Can use `sudo showmount -e` on the server to verify its serving and `sudo showmount -e <NFS server IP>` from the worker nodes to verify they have everything needed to mount
+* Using Kubeflow version 1.6
 ////
 
-* Using Kubeflow version 1.6
 
 ## After the RKE2 cluster has been created, gather the KUBECONFIG data from the Rancher Management server and provide it to a workstation with kubectl and helm installed
 
