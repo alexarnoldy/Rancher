@@ -9,7 +9,7 @@
 ##
 
 #DELETE_DELAY="2 hours"
-DELETE_DELAY="30 minutes"
+DELETE_DELAY="10 minutes"
 
 DATE=$(date +%m%d%H%M)
 
@@ -100,82 +100,4 @@ CLUSTER_NAME="${CLUSTER_BASE_NAME}-${PLATFORM}"
 func_create_rke2_cluster 
 
 func_delete_cluster
-
-##
-######## Create Azure cluster
-##
-
-PLATFORM="azure"
-
-CLUSTER_NAME="${CLUSTER_BASE_NAME}-${PLATFORM}"
-
-func_create_rke2_cluster 
-
-func_delete_cluster
-
-##
-######## Create AmazonEC2 cluster
-##
-
-PLATFORM="amazonec2"
-
-CLUSTER_NAME="${CLUSTER_BASE_NAME}-${PLATFORM}"
-
-func_create_rke2_cluster 
-
-func_delete_cluster
-
-
-
-#
-####### Create EKS cluster
-#
-
-PLATFORM="eks"
-
-CLUSTER_NAME="${CLUSTER_BASE_NAME}-${PLATFORM}"
-
-func_create_hosted_k8s_cluster
-
-func_delete_cluster
-
-#
-####### Create AKS cluster
-#
-
-PLATFORM="aks"
-
-CLUSTER_NAME="${CLUSTER_BASE_NAME}-${PLATFORM}"
-
-func_create_hosted_k8s_cluster
-
-func_delete_cluster
-
-#
-####### Create Terraform cluster
-#
-
-PLATFORM="terraform"
-
-export CLUSTER_NAME="${CLUSTER_BASE_NAME}-${PLATFORM}"
-
-ssh cc3 'bash -c "sudo sed -i 's/CLUSTER_NAME/${CLUSTER_NAME}/g' /etc/hosts"'
-
-ssh cc3 "cd /home/sles/k3s-edge-sandbox/KVM; ./bin/k3s-cluster-create.sh ${CLUSTER_NAME}"
-
-ssh cc3 'bash -c "sudo sed -i 's/${CLUSTER_NAME}/CLUSTER_NAME/g' /etc/hosts"'
-
-
-## Delete cluster code
-echo "cd /home/sles/k3s-edge-sandbox/KVM" > /tmp/delete-cluster.sh
-echo "./bin/destroy_${CLUSTER_NAME}_edge_location.sh" >> /tmp/delete-cluster.sh
-chmod 755 /tmp/delete-cluster.sh
-echo "scp /tmp/delete-cluster.sh cc3:/tmp; ssh cc3 /tmp/delete-cluster.sh" | at now +${DELETE_DELAY}
-
-rm /tmp/delete-cluster.sh
-
-
-#
-## END create clusters
-#
 

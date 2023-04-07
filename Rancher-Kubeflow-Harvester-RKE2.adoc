@@ -3,6 +3,19 @@
 
 IMPORTANT: This guide assumes Rancher Management Server is installed and configured with Harvester under Rancher management.
 
+
+# Overall steps to complete this task
+
+1 Deploy an RKE2 cluster on Harvester
+1 Deploy the NFS server
+1 Create the NFS client Container Storage Interface (CSI) on the RKE2 cluster
+1 Deploy the MetalLB load balancer
+1 Verify MetalLB and the Longhorn CSI are working correctly
+1 Deploy Istio
+1 Prepare the Kubeflow deployment files
+1 Deploy Kubeflow
+1 Connect to the Kubeflow UI
+
 .Prepare the RKE2 Kubernetes cluster
 * For these tests, we used Harvester, managed through Rancher, to create a five node RKE2 cluster
 * A project in Harvester named kubeflow-on-harvester contains a namespace named kubeflow-cluster
@@ -31,11 +44,9 @@ chpasswd:
   expire: false
 ssh_authorized_keys:
   - >-
-    ssh-rsa
-    AAAAB3NzaC1yc2EAAAADAQABAAABgQDIm3NGmcOVMqEVHmuDX6+PA3miBn20nrfkD+nYwWTtkdphTh28ZhRhFWX21/orflg93GwGk4ExE+5L0wqxBhc0wc7udmzc8HlMk6fypbmxCO6W0QB9tLOnFDiENLNetk7sKfEEKHldEWpFzJ0szUTF5x8HbzIlvbvKaRpzJfB5WvQGwx9uhFF6HFzlHVfdZGjZ2xLkZ5D3ybdqeH27eelXxl7qKP7GGaLC/39xu3iEkoxbuKzZPyJFpNnh1CLS8lks6+R+U3+d4mnW0TFu/bWLhZjne55yYCi4qnMb5QB1/sNQwXiBFlTUDzlJ9TTS0bMHRdBsokkZQU53l0pddZPcf4HATht5sE05x/1vtcTbaUZE8KUeE4IOJinF3ZQnh1q/OHEr98iTyquOA8X7ehdg7MoDbJ0rcpRWZPNzoae8IxOBMDKek6J5d1ATepOraJtK2yRtXbq68wRPEfQNIHPIcZcMWc5ZeKf7mk2p2O4Gv3c2q3chgpxLpnuLTJvwb30=
-    opensuse@opensuse-desktop
+    <REPLACE WITH SSH PUBLIC KEY>
 runcmd:
-  - SUSEConnect --url http://rmt.example.com
+  - SUSEConnect --url <REPLACE WITH RMT SERVER ADDRESS>
   - zypper -n in -t pattern apparmor
   - zypper -n up
   - zypper in --force-resolution --no-confirm --force kernel-default
@@ -50,21 +61,91 @@ runcmd:
 
 * Using Kubeflow version 1.6
 
-.Create a cluster through the Rancher UI
-* Leave "Cloud Provider" set to None
-* Under Advanced Options:
-** Disable Nginx ingress
-** Enable Pod Security Policies Support 
-*** Select the unrestricted Default Pod Security Policy
-* On the next screen, select "etcd" and "Control Plane" (deselect the "Worker" option) 
-** Copy the docker run command and paste it onto the command line of the Master VM
-** Click Done and wait for cluster to show green "Active"
-* Select the "Edit" option from the right side of the cluster line 
-** Deploy Rancher agent container with the Worker option on  the worker node VMs
-** Click Save and wait for cluster to show green "Active"
-* From top menu bar, point to "Global" or the cluster name, then select the cluster name just below it
-* Select the "Kubeconfig File" button
-** Copy the configuration into the ${HOME}/.kube/config file on a server with kubectl installed
+## After the RKE2 cluster has been created, gather the KUBECONFIG data from the Rancher Management server and provide it to a workstation with kubectl and helm installed
+
+## Deploy MetalLB
+
+* Use these instructions to deploy MetalLB to the RKE2 cluster: https://gist.github.com/alexarnoldy/24dd06d8c4291d04c5d7065b520bcb15
+
+NOTE: The instructions include testing the MetalLB service after deployment. This can be omitted as both MetalLB and the Longhorn CSI will be tested in the next step.
+
+## Test MetalLB and the Longhorn CSI
+
+* Create the manifest for an nginx pod and load balancer service:
+----
+kubectl create namespace kubeflow
+
+cat <<EOF> nginx-metallb-test.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1
+        ports:
+        - name: http
+          containerPort: 80
+        volumeMounts:
+        - mountPath: /mnt/test-vol
+          name: test-vol
+      volumes:
+      - name: test-vol
+        persistentVolumeClaim:
+          claimName: nginx-pvc
+
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nginx-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+  type: LoadBalancer
+EOF
+----
+
+* Create the pod, service, and the PVC: `kubectl apply -f nginx-metallb-test.yaml -n kubeflow`
+* Verify the pod is "Running", the persistentvolumeclaim is "Bound", and the service has an "EXTERNAL-IP": `kubectl get pod,pvc,svc -n kubeflow`
+* Test that the service is reachable through the load balancer IP address from outside the cluster:
+
+----
+IPAddr=$(kubectl get svc -n kubeflow | grep -w nginx | awk '{print$4":"$5}' | awk -F: '{print$1":"$2}')
+curl http://${IPAddr}
+----
+
+*** An HTML encoded output should be displayed that includes the phrase "Thank you for using nginx."
+
+* When finished with testing, delete the pod and service: `kubectl delete -f nginx-metallb-test.yaml -n kubeflow`
 
 .Deploy nfs-client-provisioner from Helm catalog
 * From top menu bar, point to "Global" or the cluster name, then point to the cluster name just below it, then select "Default" project
@@ -131,85 +212,6 @@ EOF
 
 * Test deploying a pod and service into the kubeflow namespace that picks an IP address from MetalLB (must have at least one IP not in use):
 ** Create the kubeflow namespace: `kubectl create ns kubeflow`
-** Create the manifest for an nginx pod and load balancer service:
-----
-cat <<EOF> nginx-metallb-test.yaml 
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx
-spec:
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:1
-        ports:
-        - name: http
-          containerPort: 80
-## START: Default StorageClass PVC test
-## To disable testing PVC creation via the default StorageClass comment 
-## out all lines from here through "## END: Default StorageClass PVC test"
-        volumeMounts:
-        - mountPath: /mnt/test-vol
-          name: test-vol
-      volumes:
-      - name: test-vol
-        persistentVolumeClaim:
-          claimName: nginx-pvc
-
-
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: nginx-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
-## END: Default StorageClass PVC test
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx
-spec:
-  ports:
-  - name: http
-    port: 8080
-    protocol: TCP
-    targetPort: 80
-  selector:
-    app: nginx
-  type: LoadBalancer
-EOF
-----
-
-NOTE: This will also test that a PVC can be created and attached to a pod by way of the default storage class. If this is not desired, comment out the appropriate lines, as described in the file.
-
-** Create the pod, service, and (optionally) the PVC: `kubectl apply -f nginx-metallb-test.yaml -n kubeflow`
-** Verify the pod is "Running", the persistentvolumeclaim is "Bound", and the service has an "EXTERNAL-IP": `kubectl get pod,pvc,svc -n kubeflow`
-** Test that the service is reachable through the load balancer IP address from outside the cluster:
-
-----
-IPAddr=$(kubectl get svc -n kubeflow | grep -w nginx | awk '{print$4":"$5}' | awk -F: '{print$1":"$2}')
-curl http://${IPAddr}
-----
-
-*** An HTML encoded output should be displayed that includes the phrase "Thank you for using nginx."
-
-* When finished with testing, delete the pod and service: `kubectl delete -f nginx-metallb-test.yaml -n kubeflow`
 
 ===== Enable Istio
 
