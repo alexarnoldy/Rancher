@@ -16,6 +16,8 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 . Deploy Kubeflow
 . Connect to the Kubeflow UI
 
+# Steps that are currently in flux
+
 .Prepare the RKE2 Kubernetes cluster
 * For these tests, we used Harvester, managed through Rancher, to create a five node RKE2 cluster
 * A project in Harvester named kubeflow-on-harvester contains a namespace named kubeflow-cluster
@@ -26,14 +28,13 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 ** Configure resources of 4 vCPU, 8GB RAM, 40GB boot drive
 ** Two VMs make up the workload-plane pool:
 *** 8 vCPU, 16GB RAM, 16GB boot drive
-* All nodes are connected to a single VLAN with routing to the Internet
+* All nodes should be in the same Harvester namespace
 * The operating systems for all nodes is the SUSE Linux Enterprise 15 SP4 minimal QCOW2 image with cloud-init enabled (previously known as the OpenStack image)
-* All operating system software was patched to the latest update
-* Kubernetes version v1.24.9+rke2r2
-* Enable the Harvester Cloud Provider CSI driver
-* A cluster label of `app=kubeflow` was applied to the RKE2 cluster
+* All nodes are connected to a single VLAN with DHCP, DNS, and routing to the Internet
+* The SSH user for the O/S image is `sles`
 
-* The following User Data cloud-config was applied to all nodes during RKE2 cluster creation:
+
+* The following User Data cloud-config (under `Show Advanced`) was applied to all nodes during RKE2 cluster creation:
 ----
 ### cloud-init
 #cloud-config
@@ -52,6 +53,19 @@ runcmd:
   - zypper in --force-resolution --no-confirm --force kernel-default
   - zypper rm kernel-default-base
 ----
+
+* The Kubernetes `Cluster Configuration` is as follows:
+** Kubernetes version v1.24.9+rke2r2 (currently depricated, but needed for fully Harvester Cloud Provider support)
+** Enable the Harvester Cloud Provider CSI driver
+** `Container Network` Interface is Calico
+** Set the `Default Security Pod Policy` to `unrestricted`
+** Disable the `Nginx Ingress` controller under `System Services`
+** Apply a cluster label of `app=kubeflow` 
+
+.Verify and reboot the RKE2 nodes
+* Verify that all operating system software has been patched to the latest update: `sudo zypper up`
+* Verify that the `kernel-default` kernel has been installed and `kernel-default-base` kernel has been removed: `sudo zypper up`
+* Will need to reboot each node, in turn to enable the kernel-default kernel
 
 ////
 .Prepare NFS server (used master node VM in these tests)
