@@ -86,15 +86,18 @@ NOTE: The instructions include testing the MetalLB service after deployment. Thi
 
 ## Test MetalLB and the Longhorn CSI
 
-* Create the manifest for an nginx pod and load balancer service:
-----
-kubectl create namespace kubeflow
+* Create the kubeflow namespace: `kubectl create namespace kubeflow`
 
+* Set this variable with the target namespace: `NAMESPACE="kubeflow"`
+* Create the manifest for an nginx pod and load balancer service:
+
+----
 cat <<EOF> nginx-metallb-test.yaml 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
+  namespace: ${NAMESPACE}
 spec:
   selector:
     matchLabels:
@@ -124,6 +127,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: nginx-pvc
+  namespace: ${NAMESPACE}
 spec:
   accessModes:
     - ReadWriteOnce
@@ -137,6 +141,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nginx
+  namespace: ${NAMESPACE}
 spec:
   ports:
   - name: http
@@ -149,21 +154,32 @@ spec:
 EOF
 ----
 
-* Create the pod, service, and the PVC: `kubectl apply -f nginx-metallb-test.yaml -n kubeflow`
-* Verify the pod is "Running", the persistentvolumeclaim is "Bound", and the service has an "EXTERNAL-IP": `kubectl get pod,pvc,svc -n kubeflow`
+* Create the pod, service, and the PVC: `kubectl apply -f nginx-metallb-test.yaml`
+* Verify the pod is "Running", the persistentvolumeclaim is "Bound", and the service has an "EXTERNAL-IP": `kubectl get pod,pvc,svc -n ${NAMESPACE}`
 * Test that the service is reachable through the load balancer IP address from outside the cluster:
 
 ----
-IPAddr=$(kubectl get svc -n kubeflow | grep -w nginx | awk '{print$4":"$5}' | awk -F: '{print$1":"$2}')
-curl http://${IPAddr}
+IPAddr=$(kubectl get svc -n ${NAMESPACE} | grep -w nginx | awk '{print$4":"$5}' | awk -F: '{print$1":"$2}')
+curl http://${IPAddr} | grep "Thank you"
 ----
 
-*** An HTML encoded output should be displayed that includes the phrase "Thank you for using nginx."
+** An HTML encoded output should display the phrase "Thank you for using nginx."
 
-* When finished with testing, delete the pod and service: `kubectl delete -f nginx-metallb-test.yaml -n kubeflow`
+* Verify that the volume is mounted in the test pod: 
+
+----
+TEST_POD=$(kubectl get pods -n ${NAMESPACE} | awk '/nginx/ {print$1}')
+kubectl exec -it ${TEST_POD} -n ${NAMESPACE} -- mount | grep test-vol
+----
+** The output should show that the volume is mounted at the location `/mnt/test-vol` 
+
+* When finished with testing, delete the pod and service: `kubectl delete -f nginx-metallb-test.yaml`
 
 # Steps that are currently in extreme flux
 
+////
+
+*****Omitted in favor of Longhorn*****
 .Deploy nfs-client-provisioner from Helm catalog
 * From top menu bar, point to "Global" or the cluster name, then point to the cluster name just below it, then select "Default" project
 * From top menu bar, select "Apps", then select "Launch"
@@ -178,6 +194,8 @@ storageClass.defaultClass=true
 *** Replace "IPAddress" with the hostname or IP address of the NFS server (RKE master node in these tests)
 *** Replace "FullyQualifiedPath" with the fully qualified path of the NFS share
 * Select "Launch" at the bottom of the page
+
+////
 
 .Deploy MetalLB load balancer from the kubectl server
 
