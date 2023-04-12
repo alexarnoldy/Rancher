@@ -187,22 +187,25 @@ EOF
 kubectl apply -f nginx-metallb-test.yaml`
 ```
 
-* Verify the pod is "Running", the persistentvolumeclaim is "Bound", and the service has an "EXTERNAL-IP": `kubectl get pod,pvc,svc -n ${NAMESPACE}`
+* Verify the pod is "Running", the persistentvolumeclaim is "Bound", and the service has an "EXTERNAL-IP": 
+```sh
+kubectl get pod,pvc,svc -n ${NAMESPACE}`
+```
 * Verify that the service is reachable through the load balancer IP address from outside the cluster:
 
-----
+```sh
 IPAddr=$(kubectl get svc -n ${NAMESPACE} | grep -w nginx | awk '{print$4":"$5}' | awk -F: '{print$1":"$2}')
 curl http://${IPAddr} | grep "Thank you"
-----
+```
 
 ** An HTML encoded output should display the phrase "Thank you for using nginx."
 
 * Verify that the volume is mounted in the test pod: 
 
-----
+```sh
 TEST_POD=$(kubectl get pods -n ${NAMESPACE} | awk '/nginx/ {print$1}')
 kubectl exec -it ${TEST_POD} -n ${NAMESPACE} -- mount | grep test-vol
-----
+```
 ** The output should show that the volume is mounted at the location `/mnt/test-vol` 
 
 * When finished with testing, delete the pod and service: 
@@ -287,6 +290,15 @@ curl http://{$IPADDR}:15020
 
 NOTE: The instructions for this secion are taken directly from: `https://github.com/kubeflow/manifests#installation`
 
+.Use the single-command installation
+* Install kustomize on the workstation
+IMPORTANT: At the time of writing Kubeflow requires kustomize version 5.0.0 or higher
+*** Use the following commands to download kustomize 5.0.0:
+```sh
+wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.0.0/kustomize_v5.0.0_linux_amd64.tar.gz
+tar xvfz kustomize_v5.0.0_linux_amd64.tar.gz
+sudo mv kustomize /usr/local/bin
+```
 # Steps that are currently in extreme flux
 .Prepare the Kubeflow deployment files on the workstation
 * Install the kfctl utility and place it in /usr/local/bin:
