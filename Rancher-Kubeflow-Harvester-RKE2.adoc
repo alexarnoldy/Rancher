@@ -63,22 +63,30 @@ runcmd:
   - zypper rm kernel-default-base
 ```
 
-```sh
-echo "So easy and yet so useful! :-)"
-```
-
 * The Kubernetes `Cluster Configuration` is as follows:
 ** Kubernetes version v1.24.9+rke2r2 (currently depricated, but needed for Harvester Cloud Provider support)
 ** Enable the Harvester Cloud Provider CSI driver
 ** `Container Network` Interface is Calico
 ** Set the `Default Security Pod Policy` to `unrestricted`
 ** Disable the `Nginx Ingress` controller under `System Services`
-** Apply a cluster label of `app=kubeflow` 
+** Apply a cluster label where they key is `app` and the value is `kubeflow` 
 
 .Verify and reboot the RKE2 nodes
-* Verify that the `kernel-default` kernel has been installed and `kernel-default-base` kernel has been removed: `sudo zypper se kernel-default`
-** If needed, remove the `kernel-default-base` kernel with: `sudo zypper rm kernel-default-base`
-* Verify that all operating system software has been patched to the latest update: `sudo zypper up`
+* Verify that the `kernel-default` kernel has been installed and `kernel-default-base` kernel has been removed: 
+```sh
+sudo zypper se kernel-default
+```
+
+** If needed, remove the `kernel-default-base` kernel with: 
+```sh
+sudo zypper rm kernel-default-base
+```
+
+* Verify that all operating system software has been patched to the latest update: 
+```sh
+sudo zypper up
+```
+
 * Will need to reboot each node, in turn to enable the kernel-default kernel
 
 ////
@@ -99,13 +107,19 @@ NOTE: The instructions in the link above include testing the MetalLB service aft
 
 ## Test MetalLB and the Longhorn CSI
 
-* Set this variable with the target namespace: `NAMESPACE="kubeflow"`
+* Set this variable with the target namespace: 
+```sh
+NAMESPACE="kubeflow"
+```
 
-* Create the namespace: `kubectl create namespace ${NAMESPACE}`
+* Create the namespace: 
+```sh
+kubectl create namespace ${NAMESPACE}
+```
 
 * Create the manifest for an nginx pod, PVC, and load balancer service:
 
-----
+```sh
 cat <<EOF> nginx-metallb-test.yaml 
 apiVersion: apps/v1
 kind: Deployment
@@ -166,9 +180,13 @@ spec:
     app: nginx
   type: LoadBalancer
 EOF
-----
+```
 
-* Create the pod, service, and the PVC: `kubectl apply -f nginx-metallb-test.yaml`
+* Create the pod, service, and the PVC: 
+```sh
+kubectl apply -f nginx-metallb-test.yaml`
+```
+
 * Verify the pod is "Running", the persistentvolumeclaim is "Bound", and the service has an "EXTERNAL-IP": `kubectl get pod,pvc,svc -n ${NAMESPACE}`
 * Verify that the service is reachable through the load balancer IP address from outside the cluster:
 
