@@ -23,6 +23,9 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 * A project in Harvester named kubeflow-on-harvester contains a namespace named kubeflow-cluster
 
 .Create a cluster through the Rancher UI
+
+NOTE: The resource allocations used here were for basic testing purposes. It is likely the more CPU and RAM would be required for the workload-plane VMs to support a useful Kubeflow workload.
+
 * The cluster name set to: `kubeflow-on-harvester` 
 * Three instances set with the roles of control-plane and etcd pool
 ** Configure resources of 4 vCPU, 8GB RAM, 40GB boot drive
@@ -80,16 +83,17 @@ runcmd:
 
 ## Deploy MetalLB
 
-* Use these instructions to deploy MetalLB to the RKE2 cluster: https://gist.github.com/alexarnoldy/24dd06d8c4291d04c5d7065b520bcb15
+* Use these instructions to deploy MetalLB on the RKE2 cluster: https://gist.github.com/alexarnoldy/24dd06d8c4291d04c5d7065b520bcb15
 
-NOTE: The instructions include testing the MetalLB service after deployment. This can be omitted as both MetalLB and the Longhorn CSI will be tested in the next step.
+NOTE: The instructions in the link above include testing the MetalLB service after deployment. This can be omitted as both MetalLB and the Longhorn CSI will be tested in the next step.
 
 ## Test MetalLB and the Longhorn CSI
 
-* Create the kubeflow namespace: `kubectl create namespace kubeflow`
-
 * Set this variable with the target namespace: `NAMESPACE="kubeflow"`
-* Create the manifest for an nginx pod and load balancer service:
+
+* Create the namespace: `kubectl create namespace ${NAMESPACE}`
+
+* Create the manifest for an nginx pod, PVC, and load balancer service:
 
 ----
 cat <<EOF> nginx-metallb-test.yaml 
@@ -156,7 +160,7 @@ EOF
 
 * Create the pod, service, and the PVC: `kubectl apply -f nginx-metallb-test.yaml`
 * Verify the pod is "Running", the persistentvolumeclaim is "Bound", and the service has an "EXTERNAL-IP": `kubectl get pod,pvc,svc -n ${NAMESPACE}`
-* Test that the service is reachable through the load balancer IP address from outside the cluster:
+* Verify that the service is reachable through the load balancer IP address from outside the cluster:
 
 ----
 IPAddr=$(kubectl get svc -n ${NAMESPACE} | grep -w nginx | awk '{print$4":"$5}' | awk -F: '{print$1":"$2}')
@@ -173,7 +177,10 @@ kubectl exec -it ${TEST_POD} -n ${NAMESPACE} -- mount | grep test-vol
 ----
 ** The output should show that the volume is mounted at the location `/mnt/test-vol` 
 
-* When finished with testing, delete the pod and service: `kubectl delete -f nginx-metallb-test.yaml`
+* When finished with testing, delete the pod and service: 
+```sh
+kubectl delete -f nginx-metallb-test.yaml
+```
 
 # Steps that are currently in extreme flux
 
@@ -197,79 +204,63 @@ storageClass.defaultClass=true
 
 ////
 
-.Deploy MetalLB load balancer from the kubectl server
 
-
-* Pull and apply the MetalLB manifests
-----
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.12.1/manifests/namespace.yaml
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.12.1/manifests/metallb.yaml
-# On first install only
-kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
-----
-
-NOTE: It can be useful to configure MetalLB with at least one IP address that will not be auto-assigned and then specify that IP address for a critical service that should not be allowed to lose its external IP address to external DNS mapping.
-
-* Set at least the default IP range and, optionally, the reserved IP range that will not be auto-assigned (Note that IP ranges can also be defined by CIDR notation. Adjust these variables and the configmap file as needed.)
-----
-export DEFAULT_IP_RANGE_START=
-export DEFAULT_IP_RANGE_END=
-export RESERVED_IP_RANGE_START=
-export RESERVED_IP_RANGE_END=
-----
-
-* Create the MetalLB configuration file for layer 2 routing. See https://metallb.universe.tf/configuration/ for other routing options and https://raw.githubusercontent.com/google/metallb/v0.9.3/manifests/example-config.yaml for lots of configuration options
-----
-cat <<EOF> metallb-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  namespace: metallb-system
-  name: config
-data:
-  config: |
-    address-pools:
-    - name: default
-      protocol: layer2
-      addresses:
-      - ${DEFAULT_IP_RANGE_START}-${DEFAULT_IP_RANGE_END}
-    - name: rsvd
-      protocol: layer2
-      auto-assign: false
-      addresses:
-      - ${RESERVED_IP_RANGE_START}-${RESERVED_IP_RANGE_END}
-EOF
-----
-
-* Create configmap: `kubectl apply -f metallb-config.yaml`
-* Verify the configuration was applied correctly (especially review the IP address pool): `kubectl get configmap config -n metallb-system -o yaml`
-* Verify the MetalLB load balancer is running: `kubectl get all -n metallb-system`
-
-* Test deploying a pod and service into the kubeflow namespace that picks an IP address from MetalLB (must have at least one IP not in use):
-** Create the kubeflow namespace: `kubectl create ns kubeflow`
 
 ===== Enable Istio
 
-NOTE: This guide assumes Istio was installed when the RKE cluster was instantiated. 
+NOTE: This guide assumes Istio was not installed when the RKE2 cluster was instantiated. 
 
-* Ensure the cluster name is shown in the top menu bar
-* Point to "Tools", then select "Istio"
-* Select the appropriate version (1.4.10 for these tests)
-* Under "Ingress Gateway", select "True" to enable
-* Under "Select Type of...", select "LoadBalancer"
-* Leave "Load Balancer IP" empty to allow MetalLB to assign an IP address
+NOTE: Installing Istio through the Rancher App Catalog requires that Rancher Monitoring be installed first.
+
+.Install Rancher Montoring via the Rancher Manager UI
+* From the "Cluster Managment" GLOBAL APP, select "Explore" on the target RKE2 cluster
+* Select "Cluster Tools", then click on "Install" for `Monitoring`
+* Select the appropriate version of the Rancher chart (the latest was used for this guide)
+* Install into the "System" project
+* Click `Next`
+* Accept the default settings on the next page
+* Click `Install`
+* The installation will open a terminal window in the bottom section of the Rancher Manager UI
+* Keep that terminal window open until it completes with an output that includes: `SUCCESS: helm upgrade --install=true ...`
+
+.Install Istio via the Rancher Manager UI
+* From the "Cluster Managment" GLOBAL APP, select "Explore" on the target RKE2 cluster
+* Select "Cluster Tools", then click on "Install" for `Istio`
+* Select the appropriate version of the Rancher chart (the latest was used for this guide)
+* Install into the "System" project
+* Select `Customize Helm options before install`
+* Click `Next`
+* Accept the default Components on the next page
+* Click `Edit YAML`
+** In the YAML file, change ingressGateways.type to `LoadBalancer`
+* Click `Install`
+* The installation will open a terminal window in the bottom section of the Rancher Manager UI
+* Keep that terminal window open until it completes with an output that includes: `SUCCESS: helm install --namespace=istio-system ...`
+
+////
 ** (Optionally) Provide an IP address that is assigned to MetalLB but not in use
+////
 
-NOTE: It can be useful to configure MetalLB with at least one IP address that will not be auto-assigned and then specify that IP address for a critical service that should not be allowed to lose its external IP address to external DNS mapping.
+////
+******Don't think this is a very good test at this point******
 
-* Select "Save" at the bottom of the page
-* Wait until Istio becomes green
-* Validate the istio-ingressgateway has received an IP address: `kubectl get svc -A | egrep --color 'EXTERNAL-IP|LoadBalancer'`
+* Use kubectl on the workstation CLI to Validate the istio-ingressgateway has received an IP address: `kubectl get svc -A | egrep --color 'EXTERNAL-IP|LoadBalancer'`
 ** (Optionally) Validate an external connection to an internal Istio service: 
-*** Use the curl command to connect to a few of the *PORT(S)* listed for the istio-ingressgateway, i.e. `curl http://{$IPADDR}:15020`
-*** At least one of the ports should return "404 page not found"
+*** Use the curl command to connect to a few of the *PORT(S)* listed for the istio-ingressgateway, i.e. `
 
-.Prepare the Kubeflow deployment files (best done from the kubectl server)
+----
+kubectl get svc -n istio-system istio-ingressgateway | awk '{print$5}'
+curl http://{$IPADDR}:15020
+----
+
+*** At least one of the ports should return "404 page not found"
+////
+
+====Install Kubeflow
+
+NOTE: The instructions for this secion are taken directly from: `https://github.com/kubeflow/manifests#installation`
+
+.Prepare the Kubeflow deployment files on the workstation
 * Install the kfctl utility and place it in /usr/local/bin:
 ----
 wget https://github.com/kubeflow/kfctl/releases/download/v1.1.0/kfctl_v1.1.0-0-g9a3621e_linux.tar.gz
