@@ -26,7 +26,10 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 
 NOTE: The resource allocations used here were for basic testing purposes. It is likely the more CPU and RAM would be required for the workload-plane VMs to support a useful Kubeflow workload.
 
-* The cluster name set to: `kubeflow-on-harvester` 
+* The cluster name set to: 
+```sh
+kubeflow-on-harvester
+```
 * Three instances set with the roles of control-plane and etcd pool
 ** Configure resources of 4 vCPU, 8GB RAM, 40GB boot drive
 ** Two VMs make up the workload-plane pool:
@@ -34,11 +37,14 @@ NOTE: The resource allocations used here were for basic testing purposes. It is 
 * All nodes should be in the same Harvester namespace
 * The operating systems for all nodes is the SUSE Linux Enterprise 15 SP4 minimal QCOW2 image with cloud-init enabled (previously known as the OpenStack image)
 * All nodes are connected to a single VLAN with DHCP, DNS, and routing to the Internet
-* The SSH user for the O/S image is `sles`
+* The SSH user for the O/S image is 
+```sh
+sles
+```
 
 
 * The following User Data cloud-config (under `Show Advanced`) was applied to all nodes during RKE2 cluster creation:
-----
+```sh
 ### cloud-init
 #cloud-config
 chpasswd:
@@ -55,7 +61,7 @@ runcmd:
   - zypper -n up
   - zypper in --force-resolution --no-confirm --force kernel-default
   - zypper rm kernel-default-base
-----
+```
 
 * The Kubernetes `Cluster Configuration` is as follows:
 ** Kubernetes version v1.24.9+rke2r2 (currently depricated, but needed for Harvester Cloud Provider support)
@@ -182,7 +188,6 @@ kubectl exec -it ${TEST_POD} -n ${NAMESPACE} -- mount | grep test-vol
 kubectl delete -f nginx-metallb-test.yaml
 ```
 
-# Steps that are currently in extreme flux
 
 ////
 
@@ -260,6 +265,7 @@ curl http://{$IPADDR}:15020
 
 NOTE: The instructions for this secion are taken directly from: `https://github.com/kubeflow/manifests#installation`
 
+# Steps that are currently in extreme flux
 .Prepare the Kubeflow deployment files on the workstation
 * Install the kfctl utility and place it in /usr/local/bin:
 ----
