@@ -286,18 +286,20 @@ curl http://{$IPADDR}:15020
 *** At least one of the ports should return "404 page not found"
 ////
 
-====Install Kubeflow
+## Install Kubeflow
 
 NOTE: The instructions for this secion are taken directly from: `https://github.com/kubeflow/manifests#installation`
 
 .Use the single-command installation
 * Install kustomize on the workstation
-IMPORTANT: At the time of writing Kubeflow requires kustomize version 5.0.0 or higher
-*** Use the following commands to download kustomize 5.0.0:
+IMPORTANT: At the time of writing, Kubeflow requires kustomize version 5.0.0 or higher
+* Find the lastest release of kustomize at https://github.com/kubernetes-sigs/kustomize/releases/
+* Adjust this variable for the appropriate release: `VERSION="v5.0.0"`
+*** Use the following commands to download and install kustomize for a Linux AMD/Intel workstation:
 ```sh
-wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.0.0/kustomize_v5.0.0_linux_amd64.tar.gz
-tar xvfz kustomize_v5.0.0_linux_amd64.tar.gz
-sudo mv kustomize /usr/local/bin
+wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${VERSION}/kustomize_${VERSION}_linux_amd64.tar.gz
+tar xvfz kustomize_${VERSION}_linux_amd64.tar.gz
+sudo mv kustomize /usr/bin
 ```
 # Steps that are currently in extreme flux
 .Prepare the Kubeflow deployment files on the workstation
