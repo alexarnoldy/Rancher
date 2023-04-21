@@ -1,4 +1,4 @@
-### Current state of this doc (03/30/23): Constant flux
+### Current state of this doc (04/21/23): Constant flux
 
 
 IMPORTANT: This guide assumes Rancher Management Server is installed and configured with Harvester under Rancher management.
@@ -18,8 +18,10 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 
 # Steps that are currently in moderate flux
 
+NOTE: Many of the following steps will be performed from an AMD/Intel Linux workstation. 
+
 .Prepare the RKE2 Kubernetes cluster
-* For these tests, we used Harvester, managed through Rancher, to create a five node RKE2 cluster
+* For this effort, we used Harvester, managed through Rancher, to create a five node RKE2 cluster
 * A project in Harvester named kubeflow-on-harvester contains a namespace named kubeflow-cluster
 
 .Create a cluster through the Rancher UI
@@ -62,7 +64,7 @@ chpasswd:
   expire: false
 ssh_authorized_keys:
   - >-
-    <REPLACE WITH SSH PUBLIC KEY>
+    <REPLACE WITH SSH PUBLIC KEY OF THE WORKSTATION>
 runcmd:
   - SUSEConnect --url <REPLACE WITH RMT SERVER ADDRESS>
   - zypper -n in -t pattern apparmor
@@ -72,16 +74,20 @@ runcmd:
 ```
 IMPORTANT: These instructions are currently only applicable for Kubernetes versions earlier than 1.25
 
-* The Kubernetes `Cluster Configuration` is as follows:
+.The Kubernetes `Cluster Configuration` is as follows:
+* On the `Basic` tab:
 ** Kubernetes version v1.24.9+rke2r2 (currently depricated, but needed for Harvester Cloud Provider support)
 ** Enable the Harvester Cloud Provider CSI driver
 ** `Container Network` Interface is Calico
 ** Set the `Default Security Pod Policy` to `unrestricted`
 ** Disable the `Nginx Ingress` controller under `System Services`
+* On the `Labels and Annotations` tab:
 ** Apply a cluster label where they key is `app` and the value is `kubeflow` 
+* Click `Create`
 
 .Verify and reboot the RKE2 nodes
-* Verify that the `kernel-default` kernel has been installed and `kernel-default-base` kernel has been removed: 
+* After the cluster has been created, SSH to each node as the user `sles`
+** Verify that the `kernel-default` kernel has been installed and `kernel-default-base` kernel has been removed: 
 ```sh
 sudo zypper se kernel-default
 ```
@@ -96,7 +102,7 @@ sudo zypper rm kernel-default-base
 sudo zypper up
 ```
 
-* Will need to reboot each node, in turn to enable the kernel-default kernel
+* Reboot each node, in turn to enable the kernel-default kernel
 
 ////
 .Prepare NFS server (used master node VM in these tests)
@@ -110,9 +116,9 @@ sudo zypper up
 
 ## Deploy MetalLB
 
-* Use these instructions to deploy MetalLB on the RKE2 cluster: https://gist.github.com/alexarnoldy/24dd06d8c4291d04c5d7065b520bcb15
+NOTE: The instructions described below include a section for `Testing MetalLB` after deployment. This can be omitted as both MetalLB and the Harvester CSI will be tested in a later step.
 
-NOTE: The instructions in the link above include testing the MetalLB service after deployment. This can be omitted as both MetalLB and the Longhorn CSI will be tested in the next step.
+* Use these instructions to deploy MetalLB on the RKE2 cluster: https://gist.github.com/alexarnoldy/24dd06d8c4291d04c5d7065b520bcb15
 
 ## Test MetalLB and the Longhorn CSI
 
@@ -193,12 +199,12 @@ EOF
 
 * Create the pod, service, and the PVC: 
 ```sh
-kubectl apply -f nginx-metallb-test.yaml`
+kubectl apply -f nginx-metallb-test.yaml
 ```
 
-* Verify the pod is "Running", the persistentvolumeclaim is "Bound", and the service has an "EXTERNAL-IP": 
+* Verify the pod is "Running", the `harvester` StorageClass is the `(default)`, the persistentvolumeclaim is "Bound", and the service has an "EXTERNAL-IP": 
 ```sh
-kubectl get pod,pvc,svc -n ${NAMESPACE}`
+kubectl get pod,sc,pvc,svc -n ${NAMESPACE}
 ```
 * Verify that the service is reachable through the load balancer IP address from outside the cluster:
 
@@ -245,6 +251,7 @@ storageClass.defaultClass=true
 
 
 
+////
 ===== Enable Istio
 
 NOTE: This guide assumes Istio was not installed when the RKE2 cluster was instantiated. 
@@ -275,6 +282,7 @@ NOTE: Installing Istio through the Rancher App Catalog requires that Rancher Mon
 * Click `Install`
 * The installation will open a terminal window in the bottom section of the Rancher Manager UI
 * Keep that terminal window open until it completes with an output that includes: `SUCCESS: helm install --namespace=istio-system ...`
+////
 
 ////
 ** (Optionally) Provide an IP address that is assigned to MetalLB but not in use
@@ -297,11 +305,12 @@ curl http://{$IPADDR}:15020
 
 ## Install Kubeflow
 
-NOTE: The instructions for this secion are taken directly from: `https://github.com/kubeflow/manifests#installation`
+NOTE: The instructions for installing Kubeflow can be found at: `https://github.com/kubeflow/manifests#installation`
 
-.Use the single-command installation
-* Install kustomize on the workstation
+.Install kustomize on the Linux workstation:
+
 IMPORTANT: At the time of writing, Kubeflow requires kustomize version 5.0.0 or higher
+
 * Find the lastest release of kustomize at https://github.com/kubernetes-sigs/kustomize/releases/
 * Adjust this variable for the appropriate release: `VERSION="v5.0.0"`
 *** Use the following commands to download and install kustomize for a Linux AMD/Intel workstation:
@@ -311,175 +320,8 @@ wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F
 tar xvfz kustomize_${VERSION}_linux_amd64.tar.gz
 sudo mv kustomize /usr/bin
 ```
-* Ensure there the Harvester Storage Class is set as the default: 
+* Follow the instructions at `https://github.com/kubeflow/manifests#installation` to either install all of the Kubeflow components with a single command, or install individual components
 
-```sh
-kubectl get sc
-```
+NOTE: MetalLB is configured to provide a Virtual IP address to `istio-ingressgateway`. However, as described at this page (https://github.com/kubeflow/manifests#nodeport--loadbalancer--ingress), TLS must be configured first. After TLS has been configured, the `istio-ingressgateway` service in the `istio-system` namespace can be edited to change the service type from `ClusterIP` to `LoadBalancer`.
 
 
-
-# *Steps that are currently in extreme flux*
-
-.Prepare the Kubeflow deployment files on the workstation
-* Install the kfctl utility and place it in /usr/local/bin:
-----
-wget https://github.com/kubeflow/kfctl/releases/download/v1.1.0/kfctl_v1.1.0-0-g9a3621e_linux.tar.gz
-tar xvfz kfctl_v1.1.0-0-g9a3621e_linux.tar.gz 
-sudo mv kfctl /usr/local/bin
-kfctl version
-----
-
-* Configure the following variables (adjust as needed)
-----
-export KF_NAME=kubeflow-deployment
-export BASE_DIR=${HOME}
-export KF_DIR=${BASE_DIR}/${KF_NAME}
-export CONFIG_URI="${KF_DIR}/kfctl_k8s_istio.v1.0.2.yaml"
-----
-
-* Create and enter the ~/kubeflow-deployment directory: `mkdir -p ${KF_DIR} && cd ${KF_DIR}`
-* Download the kfctl.yaml config file: `wget https://raw.githubusercontent.com/kubeflow/manifests/v1.0-branch/kfdef/kfctl_k8s_istio.v1.0.2.yaml`
-* The following section of the kfctl_k8s_istio.v1.0.2.yaml manifest will install and enable Istio
-** If Istio is installed and enabled, comment out the following lines, near the top of the kfctl_k8s_istio.v1.0.2.yaml file
-----
-  - kustomizeConfig:
-      parameters:
-      - name: namespace
-        value: istio-system
-      repoRef:
-        name: manifests
-        path: istio/istio-crds
-    name: istio-crds
-  - kustomizeConfig:
-      parameters:
-      - name: namespace
-        value: istio-system
-      repoRef:
-        name: manifests
-        path: istio/istio-install
-    name: istio-install
-----
-
-* Download the Kubeflow build files: `kfctl build -V -f ${CONFIG_URI}`
-
-===== Create a new pod security policy to support Kubeflow
-
-NOTE: This section assumes there is not an adequate pod security policy available in the cluster and/or the user needs help in configuring one. The PSP created here is the most privileged and the least secure PSP possible. Use at your own risk.
-
-* Create the PSP manifest file:
-----
-cat <<EOF> kubeflow-privileged-psp.yaml
-apiVersion: policy/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
-  name: kubeflow-privileged-psp
-spec:
-  allowPrivilegeEscalation: true
-  allowedCapabilities:
-  - '*'
-  fsGroup:
-    rule: RunAsAny
-  hostIPC: true
-  hostNetwork: true
-  hostPID: true
-  hostPorts:
-  - max: 65535
-    min: 0
-  privileged: true
-  runAsUser:
-    rule: RunAsAny
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: RunAsAny
-  volumes:
-  - '*'
-EOF
-----
-
-* Create the new PSP: `kubectl apply -f kubeflow-privileged-psp.yaml`
-
-.Update the kubeflow-edit and kubeflow-admin cluster roles in the cluster-roles.yaml manifest file to use the new PSP
-
-////
-* Create an aggregated cluster role file that will update the cluster roles during installation:
-
-----
-cat <<EOF> psp-update-kubeflow-edit-kubeflow-admin.yaml
-
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: psp-update-kubeflow-edit-kubeflow-admin
-  labels:
-    rbac.authorization.kubeflow.org/aggregate-to-kubeflow-admin: "true"
-    rbac.authorization.kubeflow.org/aggregate-to-kubeflow-edit: "true"
-rules:
-- apiGroups:
-  - policy
-  resourceNames:
-  - kubeflow-privileged-psp
-  resources:
-  - podsecuritypolicies
-  verbs:
-  - use
-EOF
-----
-* Save a copy of the kustomize/kubeflow-roles/base/cluster-roles.yaml file: `cp -p kustomize/kubeflow-roles/base/cluster-roles.yaml /tmp/`
-* Append the psp-update-kubeflow-edit-kubeflow-admin.yaml file to the end of the kustomize/kubeflow-roles/base/cluster-roles.yaml file: `cat psp-update-kubeflow-edit-kubeflow-admin.yaml >> kustomize/kubeflow-roles/base/cluster-roles.yaml`
-* Verify the changes: `diff kustomize/kubeflow-roles/base/cluster-roles.yaml /tmp/cluster-roles.yaml`
-////
-
-* Save a copy of the kustomize/kubeflow-roles/base/cluster-roles.yaml file: `cp -p kustomize/kubeflow-roles/base/cluster-roles.yaml /tmp/`
-* Edit the kustomize/kubeflow-roles/base/cluster-roles.yaml file
-** Search for kubeflow-kubernetes-admin 
-
-NOTE: Ensure the "resourceNames" refers to the correct PSP to be used.
-
-** Insert the following lines under the "rules:" section of the kubeflow-kubernetes-admin ClusterRole:
-----
-- apiGroups:
-  - policy
-  resourceNames:
-  - kubeflow-privileged-psp
-  resources:
-  - podsecuritypolicies
-  verbs:
-  - use
-----
-** Search for kubeflow-kubernetes-edit 
-** Insert the same lines under the "rules:" section of the kubeflow-kubernetes-edit ClusterRole
-** Save and close the file
-* Verify that only the intended changes were made to the file: `diff kustomize/kubeflow-roles/base/cluster-roles.yaml /tmp/cluster-roles.yaml`
-
-.Deploy Kubeflow
-
-* Ensure these variables are still set correctly:
-----
-echo ${KF_NAME}
-echo ${BASE_DIR}
-echo ${KF_DIR}
-echo ${CONFIG_URI}
-----
-
-* Start the deployment: `kfctl apply -V -f ${CONFIG_URI}`
-
-* From another terminal, use the following command to monitor the kubeflow deployment: `watch 'kubectl get pods -A | egrep -v "Completed|Running"'`
-
-** Over time, the number of pods that are in a state of `ContainerCreating` should decrease.
-
-.Connect to the Kubeflow web UI
-
-* Use the follow command to find the load balancer IP address (under EXTERNAL-IP) to connect to the Kubeflow UI: `kubectl get svc -n istio-system | egrep 'EXTERNAL-IP|LoadBalancer'`
-* Connect to the Kubeflow UI through a web browser pointed to the external IP address on port 80
-
-NOTE: During the first, successful test it took several hours for all of the deployments to deploy their pods. I really thought it was one of the worst failures to date, but many hours later I discovered virtually everything deployed correctly.
-
-IMPORTANT: On every attempt at least one pod had not deployed correctly. If there are only a few, or less, Navigate to "Workloads" in the "Default Project" and delete one, wait for it to re-deploy correctly, then move on to the next one. It can take several minutes for each pod to finish re-deploying correctly.
-
-CAUTION: I am still experiencing a situation where the kubeflow-edit cluster role loses the entries for the pod security policy that is assigned to it in the ~/kubeflow-deployment/kustomize/kubeflow-edit.yaml file. The result is that Jupyter Notebook can't deploy servers due to lack of a compatible PSP. 
