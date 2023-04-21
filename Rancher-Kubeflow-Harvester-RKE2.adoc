@@ -42,6 +42,14 @@ kubeflow-on-harvester
 sles
 ```
 
+////
+namespace/auth created
+namespace/cert-manager created
+namespace/istio-system created
+namespace/knative-eventing created
+namespace/knative-serving created
+namespace/kubeflow created
+////
 
 * The following User Data cloud-config (under `Show Advanced`) was applied to all nodes during RKE2 cluster creation:
 ```sh
@@ -62,6 +70,7 @@ runcmd:
   - zypper in --force-resolution --no-confirm --force kernel-default
   - zypper rm kernel-default-base
 ```
+IMPORTANT: These instructions are currently only applicable for Kubernetes versions earlier than 1.25
 
 * The Kubernetes `Cluster Configuration` is as follows:
 ** Kubernetes version v1.24.9+rke2r2 (currently depricated, but needed for Harvester Cloud Provider support)
@@ -296,12 +305,22 @@ IMPORTANT: At the time of writing, Kubeflow requires kustomize version 5.0.0 or 
 * Find the lastest release of kustomize at https://github.com/kubernetes-sigs/kustomize/releases/
 * Adjust this variable for the appropriate release: `VERSION="v5.0.0"`
 *** Use the following commands to download and install kustomize for a Linux AMD/Intel workstation:
+
 ```sh
 wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${VERSION}/kustomize_${VERSION}_linux_amd64.tar.gz
 tar xvfz kustomize_${VERSION}_linux_amd64.tar.gz
 sudo mv kustomize /usr/bin
 ```
-# Steps that are currently in extreme flux
+* Ensure there the Harvester Storage Class is set as the default: 
+
+```sh
+kubectl get sc
+```
+
+
+
+# *Steps that are currently in extreme flux*
+
 .Prepare the Kubeflow deployment files on the workstation
 * Install the kfctl utility and place it in /usr/local/bin:
 ----
