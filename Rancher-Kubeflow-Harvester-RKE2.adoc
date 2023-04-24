@@ -321,9 +321,12 @@ tar xvfz kustomize_${VERSION}_linux_amd64.tar.gz
 sudo mv kustomize /usr/bin
 ```
 
+## Install Kubeflow
 NOTE: The remainder of the procedure will require installing Kubeflow according to the instructions on the Kubeflow GitHub site, then returning to this document to enable TLS for HTTPS connections to the Kubeflow Dashboard.
 
 * Follow the instructions at `https://github.com/kubeflow/manifests#installation` to either install all of the Kubeflow components with a single command, or install individual components
+
+## Enable TLS (HTTPS) on Kubeflow
 
 * Follow the instructions at `https://gist.github.com/alexarnoldy/e84216fa969f849e79ffbcf766e92ffc` to create an applicatoin TLS certificate and private key
 ** Be sure to use these variables, while following this procudure:
@@ -333,6 +336,74 @@ export APP="kubeflow"
 export APP_K8S_NAMESPACE="istio-system"
 export APP_SERVICE_NAME="istio-ingressgateway"
 export SECRET_NAME="kubeflow-tls"
+```
+.After the TLS secret has been created, add the required TLS information to Istio:
+
+* Edit the `istio-ingressgateway` gateway: 
+
+```sh
+kubectl edit gateway -n istio-system istio-ingressgateway 
+```
+
+* Add this information at the bottom of the manifest, after the "host" HTTP information:
+
+```sh
+    tls:
+      httpsRedirect: true
+  - hosts:
+    - '*'
+    port:
+      name: https
+      number: 443
+      protocol: HTTPS
+    tls:
+      credentialName: kubeflow-lb-tls
+      mode: SIMPLE
+```
+* The `spec` section of the manifest should resemble:
+
+----
+spec:
+  selector:
+    app: istio-ingressgateway
+    istio: ingressgateway
+  servers:
+  - hosts:
+    - '*'
+    port:
+      name: http
+      number: 80
+      protocol: HTTP
+    tls:
+      httpsRedirect: true
+  - hosts:
+    - '*'
+    port:
+      name: https
+      number: 443
+      protocol: HTTPS
+    tls:
+      credentialName: kubeflow-lb-tls
+      mode: SIMPLE
+----
+
+.Patch the `istio-ingressgateway` service:
+
+* Verify the current service type:
+
+```sh
+kubectl -n istio-system get svc istio-ingressgateway -o jsonpath='{.spec.type}' ; echo ""
+```
+
+* Patch the service to change the type to LoadBalancer:
+
+```sh
+kubectl -n istio-system patch svc istio-ingressgateway -p '{"spec": {"type": "LoadBalancer"}}'
+```
+
+* Verify the service is a type of `LoadBalancer`:
+```sh
+kubectl -n istio-system get svc istio-ingressgateway -o jsonpath='{.spec.type}' ; echo ""
 ```
 
 
