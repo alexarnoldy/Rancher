@@ -374,8 +374,6 @@ spec:
       name: http
       number: 80
       protocol: HTTP
-    tls:
-      httpsRedirect: true
   - hosts:
     - '*'
     port:
@@ -387,7 +385,9 @@ spec:
       mode: SIMPLE
 ----
 
-.Patch the `istio-ingressgateway` service:
+NOTE: The `credentialName` must match the TLS secret created earlier.
+
+.Patch the `istio-ingressgateway` service to change the service type to LoadBalancer:
 
 * Verify the current service type:
 
@@ -407,6 +407,7 @@ kubectl -n istio-system get svc istio-ingressgateway -o jsonpath='{.spec.type}' 
 ```
 
 
+////
 NOTE: MetalLB is configured to provide a Virtual IP address to `istio-ingressgateway`. However, as described at this page (https://github.com/kubeflow/manifests#nodeport--loadbalancer--ingress), TLS must be configured first. After TLS has been configured, the `istio-ingressgateway` service in the `istio-system` namespace can be edited to change the service type from `ClusterIP` to `LoadBalancer`.
-
+////
 
