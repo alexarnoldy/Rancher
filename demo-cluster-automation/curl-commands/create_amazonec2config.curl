@@ -1,11 +1,11 @@
-curl 'https://rancher-demo.susealliances.com/v1/rke-machine-config.cattle.io.amazonec2configs/fleet-default' \
-  -H 'authority: rancher-demo.susealliances.com' \
+curl 'https://RANCHER_FQDN/v1/rke-machine-config.cattle.io.amazonec2configs/fleet-default' \
+  -H 'authority: RANCHER_FQDN' \
   -H 'accept: application/json' \
   -H 'accept-language: en-US,en;q=0.9' \
   -H 'content-type: application/json' \
   -H 'cookie: R_PCS=light; R_LOCALE=en-us; R_REDIRECTED=true; CSRF=579230fcbcc0e6e8b54da2f4bd90b48d; R_SESS=TOKEN' \
-  -H 'origin: https://rancher-demo.susealliances.com' \
-  -H 'referer: https://rancher-demo.susealliances.com/dashboard/c/_/manager/provisioning.cattle.io.cluster/create?type=amazonec2' \
+  -H 'origin: https://RANCHER_FQDN' \
+  -H 'referer: https://RANCHER_FQDN/dashboard/c/_/manager/provisioning.cattle.io.cluster/create?type=amazonec2' \
   -H 'sec-ch-ua: "Google Chrome";v="111", "Not(A:Brand";v="8", "Chromium";v="111"' \
   -H 'sec-ch-ua-mobile: ?0' \
   -H 'sec-ch-ua-platform: "Windows"' \

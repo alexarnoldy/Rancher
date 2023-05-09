@@ -1,6 +1,12 @@
 #!/bin/bash
 #
 #
+
+## Set RANCHER_FQDN before running the script, if needed
+: ${RANCHER_FQDN="rancher.susealliances.com"}
+
+
+
 DATE=$(date +%m%d%H%M)
 
 CLUSTER_BASE_NAME="demo-${DATE}"

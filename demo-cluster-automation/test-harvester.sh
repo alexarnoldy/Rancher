@@ -8,6 +8,9 @@
 ###### Base variables
 ##
 
+## If needed, set RANCHER_FQDN variable before running the script
+: ${RANCHER_FQDN="rancher.susealliances.com"}
+
 DELETE_DELAY="2 hours"
 #DELETE_DELAY="10 minutes"
 
@@ -19,14 +22,14 @@ CLUSTER_BASE_NAME="demo-${DATE}"
 
 func_delete_cluster () {
 cat <<EOF | at now +${DELETE_DELAY}
-curl 'https://rancher-demo.susealliances.com/v1/provisioning.cattle.io.clusters/fleet-default/${CLUSTER_NAME}' \
+curl 'https://${RANCHER_FQDN}/v1/provisioning.cattle.io.clusters/fleet-default/${CLUSTER_NAME}' \
   -X 'DELETE' \
-  -H 'authority: rancher-demo.susealliances.com' \
+  -H 'authority: ${RANCHER_FQDN}' \
   -H 'accept: application/json' \
   -H 'accept-language: en-US,en;q=0.9' \
   -H 'cookie: R_PCS=light; R_LOCALE=en-us; R_REDIRECTED=true; CSRF=3c5c95b2d40010180dba90d415e1750d; R_SESS=${TOKEN}' \
-  -H 'origin: https://rancher-demo.susealliances.com' \
-  -H 'referer: https://rancher-demo.susealliances.com/dashboard/c/_/manager/provisioning.cattle.io.cluster' \
+  -H 'origin: https://${RANCHER_FQDN}' \
+  -H 'referer: https://${RANCHER_FQDN}/dashboard/c/_/manager/provisioning.cattle.io.cluster' \
   -H 'sec-ch-ua: "Google Chrome";v="111", "Not(A:Brand";v="8", "Chromium";v="111"' \
   -H 'sec-ch-ua-mobile: ?0' \
   -H 'sec-ch-ua-platform: "Windows"' \
