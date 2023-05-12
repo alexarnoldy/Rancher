@@ -398,9 +398,9 @@ kubectl -n istio-system get svc istio-ingressgateway -o jsonpath='{.spec.type}' 
 kubectl -n istio-system patch svc istio-ingressgateway -p '{"spec": {"type": "LoadBalancer"}}'
 ```
 
-* Verify the service is a type of `LoadBalancer`:
+* Verify the service is a type of `LoadBalancer`and gather the IP address:
 ```sh
-kubectl -n istio-system get svc istio-ingressgateway -o jsonpath='{.spec.type}' ; echo ""
+kubectl -n istio-system get svc istio-ingressgateway
 ```
 
 
