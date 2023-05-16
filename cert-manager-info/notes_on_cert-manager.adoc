@@ -1,0 +1,23 @@
+### General notes:
+
+* ClusterIssuer and Issuer represent the CAs that are able to sign CSRs andseems to have the same syntax
+* Regarding what namespace ClusterIssuer works with (from ): "The ClusterIssuer resource is cluster scoped. This means that when referencing a secret via the `secretName` field, secrets will be looked for in the Cluster Resource Namespace. By default, this namespace is `cert-manager` however it can be changed via a flag on the cert-manager-controller component: `--cluster-resource-namespace=my-namespace`
+** Possibly the created certs go in the namespace defined in the Certificate resource or the namespace of the Ingress that contains the cluster-issuer annotation
+* Can add annotations to the Ingress to have cert-manager automatically create (and likely maintain) certs that the Ingress will terminate: `cert-manager.io/issuer: <name of Issuer in the same namespace>` or `cert-manager.io/cluster-issuer: <name of CluserIssuer>`
+
+### Notes on working with Kubeflow:
+
+*
+
+## Testing notes:
+
+* https://ben-omji.github.io/kubeflow/kubeflow-1/ 
+** For using Let's Encrypt with Kubeflow, but it's incomplete
+** Includes MetalLB v0.13.7 with new IPAddressPool management
+* https://cert-manager.io/docs/tutorials/acme/nginx-ingress/ 
+** A good tutorial, but uses HTTP01 and Issuer in the default namespace
+* https://cert-manager.io/docs/configuration/acme/dns01/
+** Covers DNS01 challenge provider. Fairly complete, but doesn't cover Route53
+* https://cert-manager.io/docs/configuration/acme/dns01/route53/
+** Covers Route 53, but manifests are incomplete and follows complicated use cases. Use with the link above to construct a complete manifest
+* 
