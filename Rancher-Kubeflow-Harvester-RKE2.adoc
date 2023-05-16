@@ -442,6 +442,7 @@ NOTE: An AWS user with appropriate IAM policies and API access keys is needed fo
 AWS_ACCESS_KEY_ID=""
 AWS_SECRET_ACCESS_KEY=""
 DNSZONE="" # E.g. "suse.com"
+FQDN="" # E.g. "kubeflow.suse.com"
 EMAIL_ADDR="" # valid email address for the Let's Encrypt certificate
 
 ```
@@ -499,6 +500,25 @@ cat common/oidc-authservice/base/params.env
 * Update the running oidc-authservice instance:
 ```sh
 kustomize build common/oidc-authservice/base | kubectl apply -f -
+```
+
+* Create the cert-manager Certificate resource file:
+```sh
+cat <<EOF> kubeflow-certificate.yaml 
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kubeflow-certificate
+  namespace: istio-system
+spec: 
+  secretName: kubeflow-certificate-secret
+  commonName: ${FQDN}
+  dnsNames:
+    - ${FQDN}
+  issuerRef:
+    name: letsencrypt-issuer
+    kind: Issuer
+EOF
 ```
 
 
