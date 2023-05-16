@@ -76,7 +76,9 @@ IMPORTANT: These instructions are currently only applicable for Kubernetes versi
 ** Kubernetes version v1.24.9+rke2r2 (currently depricated, but needed for Harvester Cloud Provider support)
 ** Enable the Harvester Cloud Provider CSI driver
 ** `Container Network` Interface is Calico
-** Set the `Default Security Pod Policy` to `unrestricted`
+## UPDATE START
+** Ensure the `Default Security Pod Policy` is set to `Default - RKE2 Embedded`
+## UPDATE END
 ** Disable the `Nginx Ingress` controller under `System Services`
 * On the `Labels and Annotations` tab:
 ** Apply a cluster label where they key is `app` and the value is `kubeflow` 
@@ -117,7 +119,7 @@ NOTE: The instructions described below include a section for `Testing MetalLB` a
 
 * Use these instructions to deploy MetalLB on the RKE2 cluster: https://gist.github.com/alexarnoldy/24dd06d8c4291d04c5d7065b520bcb15
 
-## Test MetalLB and the Longhorn CSI
+## Test MetalLB and the Havester (Longhorn) CSI
 
 * Set this variable with the target namespace: 
 ```sh
@@ -223,6 +225,10 @@ kubectl exec -it ${TEST_POD} -n ${NAMESPACE} -- mount | grep test-vol
 * When finished with testing, delete the pod and service: 
 ```sh
 kubectl delete -f nginx-metallb-test.yaml
+## UPDATE START
+sleep 5
+kubectl delete ns ${NAMESPACE}
+## UPDATE END
 ```
 
 
@@ -325,6 +331,9 @@ NOTE: The remainder of the procedure will require installing Kubeflow according 
 
 ## Enable TLS (HTTPS) on Kubeflow
 
+## UPDATE START - Removed creating the TLS certificate and adding to the Istio gateway
+
+////
 * Follow the instructions at `https://gist.github.com/alexarnoldy/e84216fa969f849e79ffbcf766e92ffc` to create an applicatoin TLS certificate and private key
 ** Be sure to use these variables, while following this procudure:
 
@@ -383,8 +392,13 @@ spec:
 ----
 
 NOTE: The `credentialName` must match the TLS secret created earlier.
+////
 
-.Patch the `istio-ingressgateway` service to change the service type to LoadBalancer:
+## UPDATE END
+
+## UPDATE START
+## Patch the `istio-ingressgateway` service to change the service type to LoadBalancer:
+## UPDATE END
 
 * Verify the current service type:
 
@@ -403,7 +417,56 @@ kubectl -n istio-system patch svc istio-ingressgateway -p '{"spec": {"type": "Lo
 kubectl -n istio-system get svc istio-ingressgateway
 ```
 
+## UPDATE START
+## Configure cert-manager to manage certificates from Let's Encrypt, using Route 53 DNS records
 
+NOTE: cert-manager can manage certificates from any public DNS provider. See the cert-manager documentation at https://cert-manager.io/docs/configuration/acme/ for more information.
+
+NOTE: An AWS user with appropriate IAM policies and API access keys is needed for cert-manager to access the Route53 DNS records. See the cert-manager documentation at https://cert-manager.io/docs/configuration/acme/dns01/route53/ for more information.
+
+.Create a cert-manager Issuer for Let's Encrypt:
+* Set these variables:
+```sh
+# aws_access_key_id and aws_secret_access_key for the configured AWS user:
+AWS_ACCESS_KEY_ID=""
+AWS_SECRET_ACCESS_KEY=""
+DNSZONE="" # E.g. "suse.com"
+EMAIL_ADDR="" # valid email address for the Let's Encrypt certificate
+
+```
+
+* Create the cert-manager Issuer file:
+```sh
+cat <<EOF> letsencrypt-issuer.yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-issuer
+  namespace: kubeflow
+spec:
+  acme:
+    email: ${EMAIL_ADDR}
+    server: https://acme-staging-v02.api.letsencrypt.org/directory # Remove "-staging" for Let's Encrypt production server (and its rate limits)
+    privateKeySecretRef:
+      name: letsencrypt-istio-tls-cert # Where the tls.key and tls.crt of the generated cert will be stored
+    solvers:
+    - selector:
+        dnsZones: 
+          - "${DNSZONE}"
+      dns01:
+        route53:
+          region: us-west-2
+          accessKeyID: ${AWS_ACCESS_KEY_ID}
+          secretAccessKeySecretRef:
+            name: route53-credentials-secret
+            key: secret-access-key
+EOF
+```
+
+
+
+
+## UPDATE END
 ////
 NOTE: MetalLB is configured to provide a Virtual IP address to `istio-ingressgateway`. However, as described at this page (https://github.com/kubeflow/manifests#nodeport--loadbalancer--ingress), TLS must be configured first. After TLS has been configured, the `istio-ingressgateway` service in the `istio-system` namespace can be edited to change the service type from `ClusterIP` to `LoadBalancer`.
 ////
