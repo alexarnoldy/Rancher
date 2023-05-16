@@ -229,10 +229,14 @@ kubectl exec -it ${TEST_POD} -n ${NAMESPACE} -- mount | grep test-vol
 * When finished with testing, delete the pod and service: 
 ```sh
 kubectl delete -f nginx-metallb-test.yaml
+
 ## UPDATE START
+
 sleep 5
 kubectl delete ns ${NAMESPACE}
+
 ## UPDATE END
+
 ```
 
 
@@ -401,7 +405,9 @@ NOTE: The `credentialName` must match the TLS secret created earlier.
 ## UPDATE END
 
 ## UPDATE START
+
 ## Patch the `istio-ingressgateway` service to change the service type to LoadBalancer:
+
 ## UPDATE END
 
 * Verify the current service type:
@@ -422,6 +428,7 @@ kubectl -n istio-system get svc istio-ingressgateway
 ```
 
 ## UPDATE START
+
 ## Configure cert-manager to manage certificates from Let's Encrypt, using Route 53 DNS records
 
 NOTE: cert-manager can manage certificates from any public DNS provider. See the cert-manager documentation at https://cert-manager.io/docs/configuration/acme/ for more information.
@@ -471,6 +478,7 @@ EOF
 
 
 ## UPDATE END
+
 ////
 NOTE: MetalLB is configured to provide a Virtual IP address to `istio-ingressgateway`. However, as described at this page (https://github.com/kubeflow/manifests#nodeport--loadbalancer--ingress), TLS must be configured first. After TLS has been configured, the `istio-ingressgateway` service in the `istio-system` namespace can be edited to change the service type from `ClusterIP` to `LoadBalancer`.
 ////
