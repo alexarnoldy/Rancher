@@ -439,11 +439,12 @@ NOTE: An AWS user with appropriate IAM policies and API access keys is needed fo
 * Set these variables:
 ```sh
 # aws_access_key_id and aws_secret_access_key for the configured AWS user:
-AWS_ACCESS_KEY_ID=""
-AWS_SECRET_ACCESS_KEY=""
-DNSZONE="" # E.g. "suse.com"
-FQDN="" # E.g. "kubeflow.suse.com"
-EMAIL_ADDR="" # valid email address for the Let's Encrypt certificate
+export AWS_ACCESS_KEY_ID=""
+export AWS_SECRET_ACCESS_KEY=""
+export AWS_REGION="" # E.g. "us-west-2"
+export DNSZONE="" # E.g. "suse.com"
+export FQDN="" # E.g. "kubeflow.suse.com"
+export EMAIL_ADDR="" # valid email address for the Let's Encrypt certificate
 
 ```
 
@@ -454,20 +455,20 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: letsencrypt-issuer
-  namespace: kubeflow
+  namespace: istio-system
 spec:
   acme:
     email: ${EMAIL_ADDR}
     server: https://acme-staging-v02.api.letsencrypt.org/directory # Remove "-staging" for Let's Encrypt production server (and its rate limits)
     privateKeySecretRef:
-      name: letsencrypt-istio-tls-cert # Where the tls.key and tls.crt of the generated cert will be stored
+      name: letsencrypt-issuer-priv-key # K8s secret that will contain the private key for this, specific issuer
     solvers:
     - selector:
         dnsZones: 
           - "${DNSZONE}"
       dns01:
         route53:
-          region: us-west-2
+          region: ${AWS_REGION}
           accessKeyID: ${AWS_ACCESS_KEY_ID}
           secretAccessKeySecretRef:
             name: route53-credentials-secret
@@ -477,14 +478,14 @@ EOF
 
 * Create the Kubernetes secret containing the aws_secret_access_key for the AWS user:
 ```sh
-kubectl create -n kubeflow secret generic route53-credentials-secret --from-literal=secret-access-key=${AWS_SECRET_ACCESS_KEY}```
+kubectl create -n istio-system secret generic route53-credentials-secret --from-literal=secret-access-key=${AWS_SECRET_ACCESS_KEY}```
 
 * Verify the contents of the secret:
 ```sh
-kubectl get -n kubeflow secret route53-credentials-secret -o jsonpath={.data.secret-access-key} | base64 -d; echo ""
+kubectl get -n istio-system secret route53-credentials-secret -o jsonpath={.data.secret-access-key} | base64 -d; echo ""
 ```
 
-## Update dex to allow the Let's Encrypt DNS01 challenge:
+## Update OIDC to allow the Let's Encrypt DNS01 challenge:
 
 * From inside the Kubeflow `manifests` directory (i.e. the base directory from the cloned https://github.com/kubeflow/manifests repository), update the oidc-authservice params.env file:
 
@@ -502,6 +503,11 @@ cat common/oidc-authservice/base/params.env
 kustomize build common/oidc-authservice/base | kubectl apply -f -
 ```
 
+* Verify the hostname for the certificate resolves correctly:
+```sh
+getent hosts ${FQDN}
+```
+
 * Create the cert-manager Certificate resource file:
 ```sh
 cat <<EOF> kubeflow-certificate.yaml 
@@ -511,7 +517,7 @@ metadata:
   name: kubeflow-certificate
   namespace: istio-system
 spec: 
-  secretName: kubeflow-certificate-secret
+  secretName: kubeflow-certificate-secret # Kubernetes secret that will contain the tls.key and tls.crt of the new cert
   commonName: ${FQDN}
   dnsNames:
     - ${FQDN}
@@ -520,6 +526,24 @@ spec:
     kind: Issuer
 EOF
 ```
+
+* Verify the Certificate resource file:
+```sh
+cat kubeflow-certificate.yaml
+```
+
+* Create the Certificate resource:
+```sh
+kubectl apply -f kubeflow-certificate.yaml
+```
+
+kubectl get -n istio-system certificate
+kubectl describe -n istio-system certificate kubeflow-certificate
+
+* After ready becomes true (about 3 minutes):  
+** change issuer from staging to prod 
+** delete the secret containing the cert and key
+** recreate the cert
 
 
 ## UPDATE END
