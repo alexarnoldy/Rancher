@@ -474,7 +474,32 @@ spec:
 EOF
 ```
 
+* Create the Kubernetes secret containing the aws_secret_access_key for the AWS user:
+```sh
+kubectl create -n kubeflow secret generic route53-credentials-secret --from-literal=secret-access-key=${AWS_SECRET_ACCESS_KEY}```
 
+* Verify the contents of the secret:
+```sh
+kubectl get -n kubeflow secret route53-credentials-secret -o jsonpath={.data.secret-access-key} | base64 -d; echo ""
+```
+
+## Update dex to allow the Let's Encrypt DNS01 challenge:
+
+* From inside the Kubeflow `manifests` directory (i.e. the base directory from the cloned https://github.com/kubeflow/manifests repository), update the oidc-authservice params.env file:
+
+```sh
+sed -i 's/SKIP_AUTH_URI=\/dex/SKIP_AUTH_URI=\/dex \/.well-known/' common/oidc-authservice/base/params.env
+```
+
+* Verify the update to the file:
+```sh
+cat common/oidc-authservice/base/params.env
+```
+
+* Update the running oidc-authservice instance:
+```sh
+kustomize build common/oidc-authservice/base | kubectl apply -f -
+```
 
 
 ## UPDATE END
