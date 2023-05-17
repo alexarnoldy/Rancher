@@ -1,0 +1,22 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-dns01
+  namespace: kubeflow
+spec:
+  acme:
+    email: alex.arnoldy@suse.com
+    server: https://acme-staging-v02.api.letsencrypt.org/directory # Remove "-staging" for Let's Encrypt production server (and its rate limits)
+    privateKeySecretRef:
+      name: example-issuer-account-key # Where the tls.key and tls.crt of the generated cert will be stored
+    solvers:
+    - selector:
+        dnsZones: # There's also a dnsNames selector for working with specfic names or wildcard FQDNs (*.susealliances.com)
+          - "susealliances.com"
+      dns01:
+        route53:
+          region: us-west-2
+          accessKeyID: AKIA36U5DH36DUBJQO45
+          secretAccessKeySecretRef:
+            name: route53-credentials-secret
+            key: secret-access-key

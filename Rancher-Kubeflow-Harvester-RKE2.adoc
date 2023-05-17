@@ -348,14 +348,13 @@ curl http://{$IPADDR}:15020
 
 NOTE: The instructions for installing Kubeflow can be found at: `https://github.com/kubeflow/manifests#installation`
 
-.Install kustomize on the Linux workstation:
+
+## UPDATE START
 
 IMPORTANT: At the time of writing, Kubeflow requires kustomize version 5.0.0 or higher
 
 
-## UPDATE START
-
-.Install kustomize 5.0.0 or higher
+.Install kustomize 5.0.0 or higher on the Linux workstation:
 
 ## UPDATE END
 
@@ -404,7 +403,10 @@ for EACH in auth cert-manager istio-system knative-eventing knative-serving kube
 
 ## UPDATE END
 
-* Verify the current service type:
+
+## UPDATE START
+
+* Verify the current service type (Likely `ClusterIP`):
 
 ```sh
 kubectl -n istio-system get svc istio-ingressgateway -o jsonpath='{.spec.type}' ; echo ""
@@ -416,13 +418,17 @@ kubectl -n istio-system get svc istio-ingressgateway -o jsonpath='{.spec.type}' 
 kubectl -n istio-system patch svc istio-ingressgateway -p '{"spec": {"type": "LoadBalancer"}}'
 ```
 
-* Verify the service is a type of `LoadBalancer`and gather the IP address:
+* Verify the service is a type of `LoadBalancer` and take note of the IP address:
 ```sh
 kubectl -n istio-system get svc istio-ingressgateway
 ```
 
+## UPDATE END
+
+
 ## UPDATE START
 
+## Update the AWS Route53 DNS provider wih the Kubeflow IP address and desired Fully Qualified Domain Name of the Kubeflow UI
 
 ## Use a browser to connect with HTTP (not HTTPS) to Kubeflow UI 
 
