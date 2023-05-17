@@ -44,13 +44,7 @@ kubeflow-on-harvester
 ## UPDATE START
 
 * Any Harvester namespace
-
-## UPDATE END
-
-* The operating systems for all nodes is the SUSE Linux Enterprise 15 SP4 minimal QCOW2 image with cloud-init enabled (previously known as the OpenStack image)
-
-## UPDATE START
-
+* The `Image Volume` operating systems for all nodes is the SUSE Linux Enterprise 15 SP4 minimal QCOW2 image with cloud-init enabled (previously known as the OpenStack image)
 * All nodes are connected to a Harvester network is connect to a VLAN with DHCP, DNS, and routing to the Internet
 
 ## UPDATE END
@@ -61,7 +55,13 @@ sles
 ```
 
 
-* The following User Data cloud-config (under `Show Advanced`) was applied to all nodes during RKE2 cluster creation:
+## UPDATE START
+
+
+* The following `User Data` cloud-config (under `Show Advanced`) was applied to all nodes during RKE2 cluster creation:
+
+## UPDATE END
+
 ```sh
 ### cloud-init
 #cloud-config
@@ -86,6 +86,14 @@ runcmd:
 ## UPDATE END
 
 ```
+
+## UPDATE START
+
+* Select the tick-box to `Install guest agent`
+
+## UPDATE END
+
+
 IMPORTANT: These instructions are currently only applicable for Kubernetes versions earlier than 1.25
 
 .The Kubernetes `Cluster Configuration` is as follows:
@@ -101,7 +109,9 @@ IMPORTANT: These instructions are currently only applicable for Kubernetes versi
 ## UPDATE END
 
 ** Disable the `Nginx Ingress` controller under `System Services`
+
 * On the `Labels and Annotations` tab:
+
 ** Apply a cluster label where they key is `app` and the value is `kubeflow` 
 * Click `Create`
 
