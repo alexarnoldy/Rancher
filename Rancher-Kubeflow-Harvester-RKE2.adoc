@@ -429,6 +429,24 @@ kubectl -n istio-system get svc istio-ingressgateway
 
 ## UPDATE START
 
+
+## Use a browser to connect with HTTP (not HTTPS) to Kubeflow UI 
+
+* The screen should redirect to dex and offer a login prompt
+* Login with the credentials: 
+`Email address`
+
+```sh
+user@example.com
+```
+
+`Password`
+```sh
+12341234
+```
+
+IMPORTANT: Proceed to the next section only after being able to log into the Kubeflow UI
+
 ## Configure cert-manager to manage certificates from Let's Encrypt, using Route 53 DNS records
 
 NOTE: cert-manager can manage certificates from any public DNS provider. See the cert-manager documentation at https://cert-manager.io/docs/configuration/acme/ for more information.
@@ -448,6 +466,8 @@ export EMAIL_ADDR="" # valid email address for the Let's Encrypt certificate
 
 ```
 
+NOTE: When initially creating the cert-manager Issuer, ensure the `server: https://acme-staging-v02...` line is uncommented and the `server: https://acme-v02...` line is commented out. After verifying that the certicate can be issued correctly, we will reverse this to obtain the valid, production certificate.
+
 * Create the cert-manager Issuer file:
 ```sh
 cat <<EOF> letsencrypt-issuer.yaml
@@ -459,7 +479,8 @@ metadata:
 spec:
   acme:
     email: ${EMAIL_ADDR}
-    server: https://acme-staging-v02.api.letsencrypt.org/directory # Remove "-staging" for Let's Encrypt production server (and its rate limits)
+    server: https://acme-staging-v02.api.letsencrypt.org/directory # Use this line to test the process of issuing a certificate to avoid the Let's Encrypt production rate limits
+#    server: https://acme-v02.api.letsencrypt.org/directory # Use this line after the certificate issues correctly
     privateKeySecretRef:
       name: letsencrypt-issuer-priv-key # K8s secret that will contain the private key for this, specific issuer
     solvers:
@@ -537,8 +558,37 @@ cat kubeflow-certificate.yaml
 kubectl apply -f kubeflow-certificate.yaml
 ```
 
+* Check the status of the certificate:
+```sh
 kubectl get -n istio-system certificate
+```
+
+NOTE: The certificate can take up to three minutes to be issued, as indicated by the `READY` status becoming `True`
+
+
+* If needed, check the progress of the certificate:
+```sh
 kubectl describe -n istio-system certificate kubeflow-certificate
+```
+
+IMPORTANT: If the certificate seems to be taking a long time to be issued, review the cert-manager logs for clues. Common errors are related to DNS resolution, credentials, and IAM policies. Keep checking back for the status of the certificate since it will likely keep working in the background. 
+
+* If needed, review the cert-manager logs:
+```sh
+kubectl logs -n cert-manager -l app=cert-manager
+```
+
+IMPORTANT: Proceed to the next section only after the certificate shows a `READY` status of `True` 
+
+## Update the gateway to use TLS with the cert
+
+## Use a browser to connect with HTTPS to Kubeflow UI 
+
+NOTE: Since the certificate was issued by the Let's Encrypt Staging servers, it will cause an error in the browser that it is untrusted. 
+
+* Click the lock icon in the browser's URL pane, then continue selecting appropriate options until you are able to review the connection certificate. It should say that the certificate was issued by Let's Encrypt (Staging)
+
+* The screen should redirect to dex and offer a login prompt
 
 * After ready becomes true (about 3 minutes):  
 ** change issuer from staging to prod 
