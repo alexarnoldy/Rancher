@@ -108,6 +108,7 @@ IMPORTANT: These instructions are currently only applicable for Kubernetes versi
 
 ## UPDATE END
 
+* Ignore this line, it is needed to fix bullet points below.
 ** Disable the `Nginx Ingress` controller under `System Services`
 
 * On the `Labels and Annotations` tab:
