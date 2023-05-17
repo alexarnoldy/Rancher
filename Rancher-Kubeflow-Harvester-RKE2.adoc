@@ -40,11 +40,21 @@ kubeflow-on-harvester
 ** Configure resources of 4 vCPU, 8GB RAM, 40GB boot drive
 ** Two VMs make up the workload-plane pool:
 *** 8 vCPU, 16GB RAM, 40GB boot drive
+
 ## UPDATE START
+
 * Any Harvester namespace
+
 ## UPDATE END
+
 * The operating systems for all nodes is the SUSE Linux Enterprise 15 SP4 minimal QCOW2 image with cloud-init enabled (previously known as the OpenStack image)
-* All nodes are connected to a single VLAN with DHCP, DNS, and routing to the Internet
+
+## UPDATE START
+
+* All nodes are connected to a Harvester network is connect to a VLAN with DHCP, DNS, and routing to the Internet
+
+## UPDATE END
+
 * The SSH user for the O/S image is 
 ```sh
 sles
@@ -68,7 +78,13 @@ runcmd:
   - zypper -n in -t pattern apparmor
   - zypper -n up
   - zypper in --force-resolution --no-confirm --force kernel-default
+
+## UPDATE START
+
   - zypper rm --no-confirm kernel-default-base
+
+## UPDATE END
+
 ```
 IMPORTANT: These instructions are currently only applicable for Kubernetes versions earlier than 1.25
 
@@ -98,7 +114,13 @@ sudo zypper se kernel-default
 
 ** If needed, remove the `kernel-default-base` kernel with: 
 ```sh
-sudo zypper rm kernel-default-base
+
+## UPDATE START
+
+sudo zypper rm --no-confirm kernel-default-base
+
+## UPDATE END
+
 ```
 
 * Verify that all operating system software has been patched to the latest update: 
@@ -108,12 +130,14 @@ sudo zypper up
 
 * Reboot each node, in turn to enable the kernel-default kernel
 
-////
-.Prepare NFS server (used master node VM in these tests)
-* Basic NFS deployment
-* Can use `sudo showmount -e` on the server to verify its serving and `sudo showmount -e <NFS server IP>` from the worker nodes to verify they have everything needed to mount
-* Using Kubeflow version 1.6
-////
+## UPDATE START
+
+```sh
+sudo reboot
+```
+
+## UPDATE END
+
 
 
 ## After the RKE2 cluster has been created, gather the KUBECONFIG data from the Rancher Management server and provide it to a workstation with kubectl and helm installed
