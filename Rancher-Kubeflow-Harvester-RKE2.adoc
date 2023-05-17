@@ -74,7 +74,14 @@ ssh_authorized_keys:
   - >-
     <REPLACE WITH SSH PUBLIC KEY OF THE WORKSTATION>
 runcmd:
-  - SUSEConnect --url <REPLACE WITH RMT SERVER ADDRESS>
+
+## UPDATE START
+
+#  - SUSEConnect --url <REPLACE WITH RMT SERVER ADDRESS>                                               # Uncomment if an RMT server is available
+#  - SUSEConnect -e <REPLACE WITH REGISTERED EMAILL ADDRESS> -r <REPLACE WITH SCC SUBSCRIPTION KEY>    # Uncomment if using an SCC subscription key
+
+## UPDATE END
+
   - zypper -n in -t pattern apparmor
   - zypper -n up
   - zypper in --force-resolution --no-confirm --force kernel-default
@@ -105,15 +112,16 @@ IMPORTANT: These instructions are currently only applicable for Kubernetes versi
 ## UPDATE START
 
 ** Ensure the `Default Security Pod Policy` is set to `Default - RKE2 Embedded`
+** Leave `Pod Security Admission Configuration Template` set to `(None)`
 
 ## UPDATE END
 
-* Ignore this line, it is needed to fix bullet points below.
+* (Ignore this line, it is needed to fix bullet points below)
 ** Disable the `Nginx Ingress` controller under `System Services`
 
 * On the `Labels and Annotations` tab:
 
-** Apply a cluster label where they key is `app` and the value is `kubeflow` 
+** Apply a cluster label where they key is `platform` and the value is `kubeflow` 
 * Click `Create`
 
 .Verify and reboot the RKE2 nodes
@@ -269,32 +277,12 @@ kubectl delete -f nginx-metallb-test.yaml
 ## UPDATE START
 
 sleep 5
-kubectl delete ns ${NAMESPACE}
+kubectl delete namespace ${NAMESPACE}
 
 ## UPDATE END
 
 ```
 
-
-////
-
-*****Omitted in favor of Longhorn*****
-.Deploy nfs-client-provisioner from Helm catalog
-* From top menu bar, point to "Global" or the cluster name, then point to the cluster name just below it, then select "Default" project
-* From top menu bar, select "Apps", then select "Launch"
-* Search for "nfs-client-provisioner", then select it
-** Under "Answers", paste the following into the first "Variable" answer box:
-----
-nfs.server=IPAddress
-nfs.path=FullyQualifiedPath
-storageClass.name=nfs
-storageClass.defaultClass=true
-----
-*** Replace "IPAddress" with the hostname or IP address of the NFS server (RKE master node in these tests)
-*** Replace "FullyQualifiedPath" with the fully qualified path of the NFS share
-* Select "Launch" at the bottom of the page
-
-////
 
 
 
@@ -350,13 +338,26 @@ curl http://{$IPADDR}:15020
 *** At least one of the ports should return "404 page not found"
 ////
 
-## Install Kubeflow
+
+## UPDATE START
+
+## Prepare to Install Kubeflow
+
+## UPDATE END
+
 
 NOTE: The instructions for installing Kubeflow can be found at: `https://github.com/kubeflow/manifests#installation`
 
 .Install kustomize on the Linux workstation:
 
 IMPORTANT: At the time of writing, Kubeflow requires kustomize version 5.0.0 or higher
+
+
+## UPDATE START
+
+.Install kustomize 5.0.0 or higher
+
+## UPDATE END
 
 * Find the lastest release of kustomize at https://github.com/kubernetes-sigs/kustomize/releases/
 * Adjust this variable for the appropriate release: `VERSION="v5.0.0"`
@@ -371,11 +372,20 @@ sudo mv kustomize /usr/bin
 ## Install Kubeflow
 NOTE: The remainder of the procedure will require installing Kubeflow according to the instructions on the Kubeflow GitHub site, then returning to this document to enable TLS for HTTPS connections to the Kubeflow Dashboard.
 
-* Follow the instructions at `https://github.com/kubeflow/manifests#installation` to either install all of the Kubeflow components with a single command, or install individual components
+
+## UPDATE START
+
+* Clone the repository at https://github.com/kubeflow/manifests, change into the manifests directory, then follow the instructions to either install all of the Kubeflow components with a single command, or install individual components
+
+NOTE: The remainder of this procedure has only been tested with an full installation (E.i. https://github.com/kubeflow/manifests#install-with-a-single-command)
+
+## UPDATE END
+
 
 ## Enable TLS (HTTPS) on Kubeflow
 
-## UPDATE START - Removed creating the TLS certificate and adding to the Istio gateway
+## UPDATE START - (The procedure to create a TLS certificate and add it to the Istio gateway has been removed) - ## UPDATE END
+
 
 ////
 * Follow the instructions at `https://gist.github.com/alexarnoldy/e84216fa969f849e79ffbcf766e92ffc` to create an applicatoin TLS certificate and private key
@@ -438,7 +448,6 @@ spec:
 NOTE: The `credentialName` must match the TLS secret created earlier.
 ////
 
-## UPDATE END
 
 ## UPDATE START
 
