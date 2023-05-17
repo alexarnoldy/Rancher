@@ -1,21 +1,28 @@
-### Current state of this doc (04/21/23): Constant flux
+### Current state of this doc (05/17/23): Constant flux
 
 
 IMPORTANT: This guide assumes Rancher Management Server is installed and configured with Harvester under Rancher management.
 
 
+
 # Overall steps to complete this task
+
+## UPDATE START
 
 . Deploy an RKE2 cluster on Harvester
 . Deploy the MetalLB load balancer
 . Verify MetalLB and the Longhorn CSI are working correctly
 . Deploy Kubeflow
 . Update Kubeflow to use the MetalLB load balancer
-. Connect to the Kubeflow UI
+. Connect to the Kubeflow UI via HTTP
+. Configure cert-manager to obtain a TLS certificate from Let's Encrypt
+. Configure Istio to use the TLS certificate
+. Connect to the Kubeflow UI via HTTPS
 
-# Steps that are currently in moderate flux
+NOTE: Many of the following steps will be performed from an AMD/Intel Linux workstation with access to Rancher, Harvester, and the Internet.
 
-NOTE: Many of the following steps will be performed from an AMD/Intel Linux workstation. 
+
+## UPDATE END
 
 .Prepare the RKE2 Kubernetes cluster
 * For this effort, we used Harvester, managed through Rancher, to create a five node RKE2 cluster
@@ -33,7 +40,9 @@ kubeflow-on-harvester
 ** Configure resources of 4 vCPU, 8GB RAM, 40GB boot drive
 ** Two VMs make up the workload-plane pool:
 *** 8 vCPU, 16GB RAM, 40GB boot drive
-* All nodes should be in the same Harvester namespace
+## UPDATE START
+* Any Harvester namespace
+## UPDATE END
 * The operating systems for all nodes is the SUSE Linux Enterprise 15 SP4 minimal QCOW2 image with cloud-init enabled (previously known as the OpenStack image)
 * All nodes are connected to a single VLAN with DHCP, DNS, and routing to the Internet
 * The SSH user for the O/S image is 
@@ -41,14 +50,6 @@ kubeflow-on-harvester
 sles
 ```
 
-////
-namespace/auth created
-namespace/cert-manager created
-namespace/istio-system created
-namespace/knative-eventing created
-namespace/knative-serving created
-namespace/kubeflow created
-////
 
 * The following User Data cloud-config (under `Show Advanced`) was applied to all nodes during RKE2 cluster creation:
 ```sh
@@ -67,7 +68,7 @@ runcmd:
   - zypper -n in -t pattern apparmor
   - zypper -n up
   - zypper in --force-resolution --no-confirm --force kernel-default
-  - zypper rm kernel-default-base
+  - zypper rm --no-confirm kernel-default-base
 ```
 IMPORTANT: These instructions are currently only applicable for Kubernetes versions earlier than 1.25
 
