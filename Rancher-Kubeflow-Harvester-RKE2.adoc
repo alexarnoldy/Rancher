@@ -384,72 +384,21 @@ NOTE: The remainder of this procedure has only been tested with an full installa
 
 ## Enable TLS (HTTPS) on Kubeflow
 
-## UPDATE START - (The procedure to create a TLS certificate and add it to the Istio gateway has been removed) - ## UPDATE END
+## UPDATE START 
+(The procedure to create a TLS certificate and add it to the Istio gateway has been removed) 
+## UPDATE END
 
 
-////
-* Follow the instructions at `https://gist.github.com/alexarnoldy/e84216fa969f849e79ffbcf766e92ffc` to create an applicatoin TLS certificate and private key
-** Be sure to use these variables, while following this procudure:
-
-```sh
-export APP="kubeflow"
-export APP_K8S_NAMESPACE="istio-system"
-export APP_SERVICE_NAME="istio-ingressgateway"
-export SECRET_NAME="kubeflow-tls"
-```
-.After the TLS secret has been created, add the required TLS information to Istio:
-
-* Edit the `istio-ingressgateway` gateway: 
-
-```sh
-kubectl edit gateway -n istio-system istio-ingressgateway 
-```
-
-* Add this information at the bottom of the manifest, after the "host" HTTP information:
-
-```sh
-    tls:
-      httpsRedirect: true
-  - hosts:
-    - '*'
-    port:
-      name: https
-      number: 443
-      protocol: HTTPS
-    tls:
-      credentialName: kubeflow-lb-tls
-      mode: SIMPLE
-```
-* The `spec` section of the manifest should resemble:
-
-----
-spec:
-  selector:
-    app: istio-ingressgateway
-    istio: ingressgateway
-  servers:
-  - hosts:
-    - '*'
-    port:
-      name: http
-      number: 80
-      protocol: HTTP
-  - hosts:
-    - '*'
-    port:
-      name: https
-      number: 443
-      protocol: HTTPS
-    tls:
-      credentialName: kubeflow-lb-tls
-      mode: SIMPLE
-----
-
-NOTE: The `credentialName` must match the TLS secret created earlier.
-////
 
 
 ## UPDATE START
+
+## Verify the Kubeflow installation:
+
+* Ensure all pods have a `STATUS` of `Running` and all of the containers in each pod are running:
+```sh
+for EACH in auth cert-manager istio-system knative-eventing knative-serving kubeflow; do kubectl get pods -n ${EACH}; read -p "<Enter to continue>"; echo ""; done
+```
 
 ## Patch the `istio-ingressgateway` service to change the service type to LoadBalancer:
 
