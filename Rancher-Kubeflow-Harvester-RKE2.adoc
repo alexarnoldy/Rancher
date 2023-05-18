@@ -374,6 +374,8 @@ NOTE: The remainder of the procedure will require installing Kubeflow according 
 
 ## UPDATE START
 
+IMPORTANT: Before beginning the installation process, it is recommended to run `git status` in the `manifests` directory to ensure no unexpected changes have been made to this copy of the git repo. Additionally, it is recommeneded to remove the `manifests` directory and re-clone the repo between installations.
+
 * Clone the repository at https://github.com/kubeflow/manifests, change into the manifests directory, then follow the instructions to either install all of the Kubeflow components with a single command, or install individual components
 
 NOTE: The remainder of this procedure has only been tested with an full installation (E.i. https://github.com/kubeflow/manifests#install-with-a-single-command)
@@ -405,8 +407,8 @@ user@example.com
 12341234
 ```
 
-.Troubleshooting
-* A few things that could prevent connecting or loggging into the Kubeblow dashboard include:
+### Troubleshooting Kubeflow installation
+* Some things that could prevent connecting or loggging into the Kubeblow dashboard include:
 . The https://github.com/kubeflow/manifests git repo has been modified
 ** While in the `manifests` directory, run `git status` to see if any files are different from the origin repo
 ** Remove the `manifests` directory and clone the repo again
@@ -547,6 +549,7 @@ kubectl get -n istio-system secret route53-credentials-secret -o jsonpath={.data
 * From inside the Kubeflow `manifests` directory (i.e. the base directory from the cloned https://github.com/kubeflow/manifests repository), update the oidc-authservice params.env file:
 
 ```sh
+cp -p common/oidc-authservice/base/params.env /tmp/params.env.orig
 sed -i 's/SKIP_AUTH_URI=\/dex/SKIP_AUTH_URI=\/dex \/.well-known/' common/oidc-authservice/base/params.env
 ```
 
@@ -555,9 +558,13 @@ sed -i 's/SKIP_AUTH_URI=\/dex/SKIP_AUTH_URI=\/dex \/.well-known/' common/oidc-au
 cat common/oidc-authservice/base/params.env
 ```
 
-* Update the running oidc-authservice instance:
+* Update the running oidc-authservice instance and return the file to its original state:
 ```sh
 kustomize build common/oidc-authservice/base | kubectl apply -f -
+
+sleep 5
+
+cp -p /tmp/params.env.orig common/oidc-authservice/base/params.env
 ```
 
 * Verify the hostname for the certificate resolves correctly:
