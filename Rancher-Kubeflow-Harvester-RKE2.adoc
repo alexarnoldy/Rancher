@@ -378,6 +378,49 @@ NOTE: The remainder of the procedure will require installing Kubeflow according 
 
 NOTE: The remainder of this procedure has only been tested with an full installation (E.i. https://github.com/kubeflow/manifests#install-with-a-single-command)
 
+## Verify the Kubeflow installation:
+
+* Ensure all pods have a `STATUS` of `Running` and all of the containers in each pod (E.g. 1/1, not 1/2 or 0/1) are running:
+```sh
+for EACH in auth cert-manager istio-system knative-eventing knative-serving kubeflow kubeflow-user-example-com; do kubectl get pods -n ${EACH}; read -p "<Enter to continue>"; echo ""; done
+```
+* Enable kubectl port-forwarding and ensure the Kubeflow UI permits login:
+```sh
+kubectl port-forward svc/istio-ingressgateway -n istio-system 8080:80
+```
+* In a browser on the Linux workstation, connect to:
+```sh
+http://127.0.0.1:8080
+```
+
+* Login with the credentials: 
+`Email address`
+
+```sh
+user@example.com
+```
+
+`Password`
+```sh
+12341234
+```
+
+.Troubleshooting
+* A few things that could prevent connecting or loggging into the Kubeblow dashboard include:
+. The https://github.com/kubeflow/manifests git repo has been modified
+** While in the `manifests` directory, run `git status` to see if any files are different from the origin repo
+** Remove the `manifests` directory and clone the repo again
+. Using a web browser that is not running on the Linux desktop
+** The kubectl port-forwarding opens a tunnel from the Linux workstation to the Kubeflow gateway service that only a web browser running on the same system can utilize.
+. The Kubeflow installation has not completed or failed to complete
+** Return to the beginning of this `Verify the Kubeflow installation` section and ensure all containers and pods are running correctly
+** A high number of container restarts can indicate other issues preventing the installation from completing sucessfully
+. The cluster's resources are saturated
+** Use the Linux `top` command on the worker nodes to ensure the system's CPU/memory are not overburdened
+** Check the Harvester dashboard to ensure the physical Harvester nodes are not overburdened
+
+
+
 ## UPDATE END
 
 
@@ -391,13 +434,6 @@ NOTE: The remainder of this procedure has only been tested with an full installa
 
 
 ## UPDATE START
-
-## Verify the Kubeflow installation:
-
-* Ensure all pods have a `STATUS` of `Running` and all of the containers in each pod are running:
-```sh
-for EACH in auth cert-manager istio-system knative-eventing knative-serving kubeflow; do kubectl get pods -n ${EACH}; read -p "<Enter to continue>"; echo ""; done
-```
 
 ## Patch the `istio-ingressgateway` service to change the service type to LoadBalancer:
 
