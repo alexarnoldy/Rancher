@@ -540,6 +540,7 @@ user@example.com
 12341234
 ```
 
+
 IMPORTANT: Proceed to the next section only after being able to connect to, and optionally, log into the Kubeflow UI
 
 
@@ -563,7 +564,7 @@ export EMAIL_ADDR="" # valid email address for the Let's Encrypt certificate
 
 ```
 
-NOTE: When initially creating the cert-manager Issuer, ensure the `server: https://acme-staging-v02...` line is uncommented and the `server: https://acme-v02...` line is commented out. After verifying that the certicate can be issued correctly, we will reverse this to obtain the valid, production certificate.
+NOTE: When initially creating the cert-manager Issuer, ensure the `server: https://acme-staging-v02... ` line is uncommented and the `server: https://acme-v02... ` line is commented out. After verifying that the certicate can be issued correctly, we will reverse this to obtain the valid, production certificate.
 
 * Create the cert-manager Issuer file:
 ```sh
@@ -594,9 +595,21 @@ spec:
 EOF
 ```
 
+IMPORTANT: Review the letsencrypt-issuer.yaml file for accuracy before continuing
+
+
+* Create the `letsencrypt-issuer` resource:
+
+```sh
+kubectl apply -f letsencrypt-issuer.yaml
+```
+
 * Create the Kubernetes secret containing the aws_secret_access_key for the AWS user:
+
+
 ```sh
 kubectl create -n istio-system secret generic route53-credentials-secret --from-literal=secret-access-key=${AWS_SECRET_ACCESS_KEY}```
+```
 
 * Verify the contents of the secret:
 ```sh
