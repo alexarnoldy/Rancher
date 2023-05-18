@@ -260,7 +260,7 @@ kubectl get pod,sc,pvc,svc -n ${NAMESPACE}
 
 ```sh
 IPAddr=$(kubectl get svc -n ${NAMESPACE} | grep -w nginx | awk '{print$4":"$5}' | awk -F: '{print$1":"$2}')
-curl http://${IPAddr} >/dev/null 2>&1 | grep "Thank you"
+curl http://${IPAddr} 2>/dev/null | grep "Thank you for using nginx"
 ```
 
 ## UPDATE END
@@ -380,7 +380,7 @@ NOTE: The remainder of the procedure will require installing Kubeflow according 
 
 ## UPDATE START
 
-IMPORTANT: Before beginning the installation process, it is recommended to run `git status` in the `manifests` directory to ensure no unexpected changes have been made to this copy of the git repo. Additionally, it is recommeneded to remove the `manifests` directory and re-clone the repo between installations.
+IMPORTANT: Before running the first installation command, it is recommended to run `git status` in the `manifests` directory to ensure no unexpected changes have been made to this copy of the git repo. Additionally, it is recommeneded to remove the `manifests` directory and re-clone the repo between installation efforts.
 
 * Clone the repository at https://github.com/kubeflow/manifests, change into the manifests directory, then follow the instructions to either install all of the Kubeflow components with a single command, or install individual components
 
