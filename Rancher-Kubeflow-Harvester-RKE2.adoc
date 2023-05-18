@@ -413,9 +413,12 @@ user@example.com
 12341234
 ```
 
+* Use `Ctrl+c` to close the kubectl port-forward session
+
+
 ### Troubleshooting Kubeflow installation
 * Some things that could prevent connecting or loggging into the Kubeblow dashboard include:
-. The https://github.com/kubeflow/manifests git repo has been modified
+. The local copy of the https://github.com/kubeflow/manifests git repo doesn't match the origin
 ** While in the `manifests` directory, run `git status` to see if any files are different from the origin repo
 ** Remove the `manifests` directory and clone the repo again
 . Using a web browser that is not running on the Linux desktop
@@ -425,7 +428,7 @@ user@example.com
 ** A high number of container restarts can indicate other issues preventing the installation from completing sucessfully
 . The cluster's resources are saturated
 ** Use the Linux `top` command on the worker nodes to ensure the system's CPU/memory are not overburdened
-** Check the Harvester dashboard to ensure the physical Harvester nodes are not overburdened
+** Check the Harvester dashboard to ensure the physical Harvester nodes are not overburdened or experiencing failures
 
 
 
