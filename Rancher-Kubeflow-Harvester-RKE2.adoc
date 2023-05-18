@@ -470,6 +470,54 @@ kubectl -n istio-system patch svc istio-ingressgateway -p '{"spec": {"type": "Lo
 kubectl -n istio-system get svc istio-ingressgateway
 ```
 
+## Update the Kubeflow Istio Gateway
+
+* Edit the kubeflow-gateway resource to add HTTPS routing:
+```sh
+kubectl edit -n kubeflow gateways.networking.istio.io kubeflow-gateway
+```
+
+* Add this portion to the bottom of the `spec:` section:
+
+```sh
+    tls:
+      httpsRedirect: false
+  - hosts:
+    - "*"
+    port:
+      name: https
+      number: 443
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: kubeflow-certificate-secret
+```
+
+* The entire `spec:` section should look like this:
+```sh
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - hosts:
+    - '*'
+    port:
+      name: http
+      number: 80
+      protocol: HTTP
+    tls:
+      httpsRedirect: false
+  - hosts:
+    - "*"
+    port:
+      name: https
+      number: 443
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: kubeflow-certificate-secret
+```
+ 
 ## UPDATE END
 
 
@@ -477,10 +525,10 @@ kubectl -n istio-system get svc istio-ingressgateway
 
 ## Update the AWS Route53 DNS provider wih the Kubeflow IP address and desired Fully Qualified Domain Name of the Kubeflow UI
 
-## Use a browser to connect with HTTP (not HTTPS) to Kubeflow UI 
+## Use a browser to connect, with HTTP (not HTTPS), to Kubeflow UI at the FQDN
 
 * The screen should redirect to dex and offer a login prompt
-* Login with the credentials: 
+* (Optional) Login with the credentials: 
 `Email address`
 
 ```sh
@@ -492,7 +540,9 @@ user@example.com
 12341234
 ```
 
-IMPORTANT: Proceed to the next section only after being able to log into the Kubeflow UI
+IMPORTANT: Proceed to the next section only after being able to connect to, and optionally, log into the Kubeflow UI
+
+
 
 ## Configure cert-manager to manage certificates from Let's Encrypt, using Route 53 DNS records
 
