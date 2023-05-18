@@ -171,7 +171,7 @@ NOTE: The instructions described below include a section for `Testing MetalLB` a
 
 * Set this variable with the target namespace: 
 ```sh
-NAMESPACE="kubeflow"
+NAMESPACE="lb-test"
 ```
 
 * Create the namespace: 
@@ -255,10 +255,16 @@ kubectl get pod,sc,pvc,svc -n ${NAMESPACE}
 ```
 * Verify that the service is reachable through the load balancer IP address from outside the cluster:
 
+
+## UPDATE START
+
 ```sh
 IPAddr=$(kubectl get svc -n ${NAMESPACE} | grep -w nginx | awk '{print$4":"$5}' | awk -F: '{print$1":"$2}')
-curl http://${IPAddr} | grep "Thank you"
+curl http://${IPAddr} >/dev/null 2>&1 | grep "Thank you"
 ```
+
+## UPDATE END
+
 
 ** An HTML encoded output should display the phrase "Thank you for using nginx."
 
