@@ -18,10 +18,11 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 . Update Istio to use the MetalLB load balancer
 . Enable HTTPS on the Kubeflow Istio Gateway
 . Update the AWS Route53 
-
 . Configure cert-manager to manage Let's Encrypt certificates, using Route 53 DNS records
-. Configure Istio to use the TLS certificate
-. Connect to the Kubeflow UI via HTTPS
+. Use a web browser to connect to Kubeflow UI with the Let's Encrypt Staging certificate
+. Update the configuration to use a Let's Encrypt production certificate
+. Use a web browser to connect to Kubeflow UI with the Let's Encrypt Production certificate
+. Optionally, set the kubeflow-gateway to redirect HTTP to HTTPS 
 
 NOTE: Many of the following steps will be performed from an AMD/Intel Linux workstation with access to Rancher, Harvester, and the Internet.
 
@@ -710,10 +711,10 @@ kubectl apply -f kubeflow-certificate.yaml
 ```sh
 kubectl get -w -n istio-system certificate
 ```
-** Use `Ctrl+c` to exit the kubectl watch (-w) command
+** Use `Ctrl+c` to exit the kubectl -w (watch) command
 
 
-NOTE: The certificate can take up to three minutes to be issued, as indicated by the `READY` status becoming `True`
+NOTE: The certificate commonly takes 100 seconds to be issued but can take up to three minutes. The `READY` status will change to `True` when it is issued.
 
 
 * If needed, check the progress of the certificate:
@@ -730,15 +731,13 @@ kubectl logs -n cert-manager -l app=cert-manager
 
 IMPORTANT: Proceed to the next section only after the certificate shows a `READY` status of `True` 
 
-## Update the gateway to use TLS with the cert
-
-## Use a browser to connect with HTTPS to Kubeflow UI 
+# Use a web browser to connect to Kubeflow UI with the Let's Encrypt Staging certificate
 
 NOTE: Since the certificate was issued by the Let's Encrypt *Staging* servers, it will cause an error in the browser that it is untrusted. 
 
 * Click the lock icon in the browser's URL pane, then continue selecting appropriate options until you are able to review the connection certificate. It should say that the certificate was issued by Let's Encrypt (Staging)
 
-## Update the configuration to use a production Let's Encrypt certificate
+# Update the configuration to use a Let's Encrypt production certificate
 
 * Update the letsencrypt-issuer.yaml file to comment out the `server: https://acme-staging-v02` line and uncomment the `server: https://acme-v02` line:
 
@@ -775,10 +774,11 @@ NOTE: The certificate can take up to three minutes to be issued, as indicated by
 kubectl rollout restart deployment -n istio-system istio-ingressgateway
 ```
 
+# Use a web browser to connect to Kubeflow UI with the Let's Encrypt Production certificate
 
 * Close and reopen the browser to verify the publicly signed certificate at the Kubeflow UI's HTTPS URL
 
-## Optionally, set the kubeflow-gateway to redirect HTTP to HTTPS 
+# Optionally, set the kubeflow-gateway to redirect HTTP to HTTPS 
 
 * Edit the kubeflow resource:
 ```sh
