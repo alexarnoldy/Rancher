@@ -564,7 +564,7 @@ export EMAIL_ADDR="" # valid email address for the Let's Encrypt certificate
 
 ```
 
-NOTE: When initially creating the cert-manager Issuer, ensure the `server: https://acme-staging-v02... ` line is uncommented and the `server: https://acme-v02... ` line is commented out. After verifying that the certicate can be issued correctly, we will reverse this to obtain the valid, production certificate.
+NOTE: When initially creating the cert-manager Issuer, ensure the `server: https://acme-staging-v02` line is uncommented and the `server: https://acme-v02` line is commented out. After verifying that the certicate can be issued correctly, we will reverse this to obtain the valid, production certificate.
 
 * Create the cert-manager Issuer file:
 ```sh
@@ -597,6 +597,11 @@ EOF
 
 IMPORTANT: Review the letsencrypt-issuer.yaml file for accuracy before continuing
 
+* Verify the update to the file:
+```sh
+cat letsencrypt-issuer.yaml
+```
+
 
 * Create the `letsencrypt-issuer` resource:
 
@@ -606,9 +611,8 @@ kubectl apply -f letsencrypt-issuer.yaml
 
 * Create the Kubernetes secret containing the aws_secret_access_key for the AWS user:
 
-
 ```sh
-kubectl create -n istio-system secret generic route53-credentials-secret --from-literal=secret-access-key=${AWS_SECRET_ACCESS_KEY}```
+kubectl create -n istio-system secret generic route53-credentials-secret --from-literal=secret-access-key=${AWS_SECRET_ACCESS_KEY}`
 ```
 
 * Verify the contents of the secret:
@@ -623,9 +627,10 @@ kubectl get -n istio-system secret route53-credentials-secret -o jsonpath={.data
 ```sh
 cp -p common/oidc-authservice/base/params.env /tmp/params.env.orig
 sed -i 's/SKIP_AUTH_URI=\/dex/SKIP_AUTH_URI=\/dex \/.well-known/' common/oidc-authservice/base/params.env
+sed -i 's/SKIP_AUTH_URLS=\/dex/SKIP_AUTH_URI=\/dex \/.well-known/' common/oidc-authservice/base/params.env
 ```
 
-* Verify the update to the file:
+* Verify the file now contains `/dex /.well-known` on the SKIP_AUTH... line:
 ```sh
 cat common/oidc-authservice/base/params.env
 ```
@@ -675,8 +680,10 @@ kubectl apply -f kubeflow-certificate.yaml
 
 * Check the status of the certificate:
 ```sh
-kubectl get -n istio-system certificate
+kubectl get -w -n istio-system certificate
 ```
+** Use `Ctrl+c` to exit the kubectl watch (-w) command
+
 
 NOTE: The certificate can take up to three minutes to be issued, as indicated by the `READY` status becoming `True`
 
@@ -699,11 +706,28 @@ IMPORTANT: Proceed to the next section only after the certificate shows a `READY
 
 ## Use a browser to connect with HTTPS to Kubeflow UI 
 
-NOTE: Since the certificate was issued by the Let's Encrypt Staging servers, it will cause an error in the browser that it is untrusted. 
+NOTE: Since the certificate was issued by the Let's Encrypt *Staging* servers, it will cause an error in the browser that it is untrusted. 
 
 * Click the lock icon in the browser's URL pane, then continue selecting appropriate options until you are able to review the connection certificate. It should say that the certificate was issued by Let's Encrypt (Staging)
 
-* The screen should redirect to dex and offer a login prompt
+## Update the configuration to use a production Let's Encrypt certificate
+
+* Update the letsencrypt-issuer.yaml file to comment out the `server: https://acme-staging-v02` line and uncomment the `server: https://acme-v02` line:
+
+
+* Update the `letsencrypt-issuer` resource:
+
+```sh
+kubectl apply -f letsencrypt-issuer.yaml
+```
+
+* Remove the certificatate and its associated secret:
+
+* Recreate the certificate:
+
+* Reload the browser window to verify the publicly signed certificate
+
+
 
 * After ready becomes true (about 3 minutes):  
 ** change issuer from staging to prod 
