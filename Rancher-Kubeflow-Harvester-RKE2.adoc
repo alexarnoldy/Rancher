@@ -722,22 +722,41 @@ kubectl apply -f letsencrypt-issuer.yaml
 ```
 
 * Remove the certificatate and its associated secret:
+```sh
+kubectl -n istio-system delete secret kubeflow-certificate-secret
+kubectl -n istio-system delete certificate kubeflow-certificate
+```
 
 * Recreate the certificate:
+```sh
+kubectl apply -f kubeflow-certificate.yaml
+```
 
-* Reload the browser window to verify the publicly signed certificate
+* Check the status of the certificate:
+```sh
+kubectl get -w -n istio-system certificate
+```
+** Use `Ctrl+c` to exit the kubectl watch (-w) command
 
 
+NOTE: The certificate can take up to three minutes to be issued, as indicated by the `READY` status becoming `True`
 
-* After ready becomes true (about 3 minutes):  
-** change issuer from staging to prod 
-** delete the secret containing the cert and key
-** recreate the cert
 
+* Refresh the istio-gateway deployment to use the new certificate:
+```sh
+kubectl rollout restart deployment -n istio-system istio-ingressgateway
+```
+
+
+* Close and reopen the browser to verify the publicly signed certificate at the Kubeflow UI's HTTPS URL
+
+## Optionally, set the kubeflow-gateway to redirect HTTP to HTTPS 
+
+* Edit the kubeflow resource:
+```sh
+kubectl edit -n kubeflow gateways.networking.istio.io kubeflow-gateway
+```
+** Change `httpsRedirect: false` to `httpsRedirect: true`
 
 ## UPDATE END
-
-////
-NOTE: MetalLB is configured to provide a Virtual IP address to `istio-ingressgateway`. However, as described at this page (https://github.com/kubeflow/manifests#nodeport--loadbalancer--ingress), TLS must be configured first. After TLS has been configured, the `istio-ingressgateway` service in the `istio-system` namespace can be edited to change the service type from `ClusterIP` to `LoadBalancer`.
-////
 
