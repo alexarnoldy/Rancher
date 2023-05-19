@@ -1,7 +1,7 @@
 ### Current state of this doc (05/17/23): Constant flux
 
 
-IMPORTANT: This guide assumes Rancher Management Server is installed and configured with Harvester under Rancher management.
+IMPORTANT: This guide assumes Rancher Management Server is installed and configured with Harvester under Rancher management, and an AWS Route53 DNS domain is available.
 
 
 
