@@ -11,11 +11,15 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 
 . Deploy an RKE2 cluster on Harvester
 . Deploy the MetalLB load balancer
-. Verify MetalLB and the Longhorn CSI are working correctly
+. Verify the correct operation of MetalLB and the Harvester/Longhorn CSI
+. Install kustomize 5.0.0 or higher
 . Deploy Kubeflow
-. Update Kubeflow to use the MetalLB load balancer
-. Connect to the Kubeflow UI via HTTP
-. Configure cert-manager to obtain a TLS certificate from Let's Encrypt
+. Verify the Kubeflow installation
+. Update Istio to use the MetalLB load balancer
+. Enable HTTPS on the Kubeflow Istio Gateway
+. Update the AWS Route53 
+
+. Configure cert-manager to manage Let's Encrypt certificates, using Route 53 DNS records
 . Configure Istio to use the TLS certificate
 . Connect to the Kubeflow UI via HTTPS
 
@@ -78,7 +82,7 @@ runcmd:
 
 ## UPDATE START
 
-#  - SUSEConnect --url <REPLACE WITH RMT SERVER ADDRESS>                                               # Uncomment if an RMT server is available
+#  - SUSEConnect --url <REPLACE WITH RMT SERVER ADDRESS>                                               # Uncomment if using an RMT server
 #  - SUSEConnect -e <REPLACE WITH REGISTERED EMAILL ADDRESS> -r <REPLACE WITH SCC SUBSCRIPTION KEY>    # Uncomment if using an SCC subscription key
 
 ## UPDATE END
@@ -162,18 +166,30 @@ sudo reboot
 
 ## After the RKE2 cluster has been created, gather the KUBECONFIG data from the Rancher Management server and provide it to a workstation with kubectl and helm installed
 
-## Deploy MetalLB
+
+## UPDATE START
+
+# Deploy the MetalLB load balancer
+
+## UPDATE END
+
 
 NOTE: The instructions described below include a section for `Testing MetalLB` after deployment. This can be omitted as both MetalLB and the Harvester CSI will be tested in a later step.
 
 * Use these instructions to deploy MetalLB on the RKE2 cluster: https://gist.github.com/alexarnoldy/24dd06d8c4291d04c5d7065b520bcb15
 
-## Test MetalLB and the Havester (Longhorn) CSI
+
+## UPDATE START
+
+# Verify the correct operation of MetalLB and the Harvester/Longhorn CSI
+
 
 * Set this variable with the target namespace: 
 ```sh
-NAMESPACE="lb-test"
+NAMESPACE="metallb-harvester-csi-test"
 ```
+
+## UPDATE END
 
 * Create the namespace: 
 ```sh
@@ -348,7 +364,7 @@ curl http://{$IPADDR}:15020
 
 ## UPDATE START
 
-## Prepare to Install Kubeflow
+# Install kustomize 5.0.0 or higher
 
 ## UPDATE END
 
@@ -375,7 +391,13 @@ tar xvfz kustomize_${VERSION}_linux_amd64.tar.gz
 sudo mv kustomize /usr/bin
 ```
 
-## Install Kubeflow
+
+## UPDATE START
+
+# Deploy Kubeflow
+
+## UPDATE END
+
 NOTE: The remainder of the procedure will require installing Kubeflow according to the instructions on the Kubeflow GitHub site, then returning to this document to enable TLS for HTTPS connections to the Kubeflow Dashboard.
 
 
@@ -387,7 +409,7 @@ IMPORTANT: Before running the first installation command, it is recommended to r
 
 NOTE: The remainder of this procedure has only been tested with an full installation (E.i. https://github.com/kubeflow/manifests#install-with-a-single-command)
 
-## Verify the Kubeflow installation:
+# Verify the Kubeflow installation
 
 * Ensure all pods have a `STATUS` of `Running` and all of the containers in each pod (E.g. 1/1, not 1/2 or 0/1) are running:
 ```sh
@@ -397,6 +419,9 @@ for EACH in auth cert-manager istio-system knative-eventing knative-serving kube
 ```sh
 kubectl port-forward svc/istio-ingressgateway -n istio-system 8080:80
 ```
+
+NOTE: In the following step ensure the connect is HTTP, not HTTPS
+
 * In a browser on the Linux workstation, connect to:
 ```sh
 http://127.0.0.1:8080
@@ -433,10 +458,10 @@ user@example.com
 
 
 
+(Moved "Enable TLS (HTTPS) on Kubeflow")
+
 ## UPDATE END
 
-
-## Enable TLS (HTTPS) on Kubeflow
 
 ## UPDATE START 
 (The procedure to create a TLS certificate and add it to the Istio gateway has been removed) 
@@ -447,14 +472,14 @@ user@example.com
 
 ## UPDATE START
 
-## Patch the `istio-ingressgateway` service to change the service type to LoadBalancer:
+# Update Istio to use the MetalLB load balancer
 
 ## UPDATE END
 
 
 ## UPDATE START
 
-* Verify the current service type (Likely `ClusterIP`):
+* Verify the current `istio-ingressgateway` service type (Likely `ClusterIP`):
 
 ```sh
 kubectl -n istio-system get svc istio-ingressgateway -o jsonpath='{.spec.type}' ; echo ""
@@ -471,7 +496,7 @@ kubectl -n istio-system patch svc istio-ingressgateway -p '{"spec": {"type": "Lo
 kubectl -n istio-system get svc istio-ingressgateway
 ```
 
-## Update the Kubeflow Istio Gateway
+# Enable HTTPS on the Kubeflow Istio Gateway
 
 * Edit the kubeflow-gateway resource to add HTTPS routing:
 ```sh
@@ -524,7 +549,9 @@ spec:
 
 ## UPDATE START
 
-## Update the AWS Route53 DNS provider wih the Kubeflow IP address and desired Fully Qualified Domain Name of the Kubeflow UI
+# Update the AWS Route53 
+
+* Update the AWS Route53 DNS provider wih the Kubeflow IP address and the desired Fully Qualified Domain Name for the Kubeflow UI
 
 ## Use a browser to connect, with HTTP (not HTTPS), to Kubeflow UI at the FQDN
 
@@ -546,7 +573,7 @@ IMPORTANT: Proceed to the next section only after being able to connect to, and 
 
 
 
-## Configure cert-manager to manage certificates from Let's Encrypt, using Route 53 DNS records
+# Configure cert-manager to manage Let's Encrypt certificates, using Route 53 DNS records
 
 NOTE: cert-manager can manage certificates from any public DNS provider. See the cert-manager documentation at https://cert-manager.io/docs/configuration/acme/ for more information.
 
