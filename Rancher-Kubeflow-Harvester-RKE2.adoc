@@ -21,6 +21,7 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 
 NOTE: Many of the following steps will be performed from an AMD/Intel Linux workstation with access to Rancher, Harvester, and the Internet.
 
+# Deploy an RKE2 cluster on Harvester
 
 ## UPDATE END
 
