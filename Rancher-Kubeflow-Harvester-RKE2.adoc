@@ -7,7 +7,6 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 
 # Overall steps to complete this task
 
-## UPDATE START
 
 . Deploy an RKE2 cluster on Harvester
 . Deploy the MetalLB load balancer
@@ -28,7 +27,6 @@ NOTE: Many of the following steps will be performed from an AMD/Intel Linux work
 
 # Deploy an RKE2 cluster on Harvester
 
-## UPDATE END
 
 .Prepare the RKE2 Kubernetes cluster
 * For this effort, we used Harvester, managed through Rancher, to create a five node RKE2 cluster
@@ -47,13 +45,11 @@ kubeflow-on-harvester
 ** Two VMs make up the workload-plane pool:
 *** 8 vCPU, 16GB RAM, 40GB boot drive
 
-## UPDATE START
 
 * Any Harvester namespace
 * The `Image Volume` operating systems for all nodes is the SUSE Linux Enterprise 15 SP4 minimal QCOW2 image with cloud-init enabled (previously known as the OpenStack image)
 * All nodes are connected to a Harvester network is connect to a VLAN with DHCP, DNS, and routing to the Internet
 
-## UPDATE END
 
 * The SSH user for the O/S image is 
 ```sh
@@ -61,12 +57,10 @@ sles
 ```
 
 
-## UPDATE START
 
 
 * The following `User Data` cloud-config (under `Show Advanced`) was applied to all nodes during RKE2 cluster creation:
 
-## UPDATE END
 
 ```sh
 ### cloud-init
@@ -80,32 +74,14 @@ ssh_authorized_keys:
   - >-
     <REPLACE WITH SSH PUBLIC KEY OF THE WORKSTATION>
 runcmd:
-
-## UPDATE START
-
 #  - SUSEConnect --url <REPLACE WITH RMT SERVER ADDRESS>                                               # Uncomment if using an RMT server
 #  - SUSEConnect -e <REPLACE WITH REGISTERED EMAILL ADDRESS> -r <REPLACE WITH SCC SUBSCRIPTION KEY>    # Uncomment if using an SCC subscription key
-
-## UPDATE END
-
   - zypper -n in -t pattern apparmor
   - zypper -n up
   - zypper in --force-resolution --no-confirm --force kernel-default
-
-## UPDATE START
-
   - zypper rm --no-confirm kernel-default-base
-
-## UPDATE END
-
 ```
-
-## UPDATE START
-
 * Select the tick-box to `Install guest agent`
-
-## UPDATE END
-
 
 IMPORTANT: These instructions are currently only applicable for Kubernetes versions earlier than 1.25
 
@@ -114,14 +90,8 @@ IMPORTANT: These instructions are currently only applicable for Kubernetes versi
 ** Kubernetes version v1.24.9+rke2r2 (currently depricated, but needed for Harvester Cloud Provider support)
 ** Enable the Harvester Cloud Provider CSI driver
 ** `Container Network` Interface is Calico
-
-## UPDATE START
-
 ** Ensure the `Default Security Pod Policy` is set to `Default - RKE2 Embedded`
 ** Leave `Pod Security Admission Configuration Template` set to `(None)`
-
-## UPDATE END
-
 * (Ignore this line, it is needed to fix bullet points below)
 ** Disable the `Nginx Ingress` controller under `System Services`
 
@@ -139,13 +109,7 @@ sudo zypper se kernel-default
 
 ** If needed, remove the `kernel-default-base` kernel with: 
 ```sh
-
-## UPDATE START
-
 sudo zypper rm --no-confirm kernel-default-base
-
-## UPDATE END
-
 ```
 
 * Verify that all operating system software has been patched to the latest update: 
@@ -154,33 +118,18 @@ sudo zypper up
 ```
 
 * Reboot each node, in turn to enable the kernel-default kernel
-
-## UPDATE START
-
 ```sh
 sudo reboot
 ```
 
-## UPDATE END
-
-
 
 ## After the RKE2 cluster has been created, gather the KUBECONFIG data from the Rancher Management server and provide it to a workstation with kubectl and helm installed
 
-
-## UPDATE START
-
 # Deploy the MetalLB load balancer
-
-## UPDATE END
-
 
 NOTE: The instructions described below include a section for `Testing MetalLB` after deployment. This can be omitted as both MetalLB and the Harvester CSI will be tested in a later step.
 
 * Use these instructions to deploy MetalLB on the RKE2 cluster: https://gist.github.com/alexarnoldy/24dd06d8c4291d04c5d7065b520bcb15
-
-
-## UPDATE START
 
 # Verify the correct operation of MetalLB and the Harvester/Longhorn CSI
 
@@ -189,9 +138,6 @@ NOTE: The instructions described below include a section for `Testing MetalLB` a
 ```sh
 NAMESPACE="metallb-harvester-csi-test"
 ```
-
-## UPDATE END
-
 * Create the namespace: 
 ```sh
 kubectl create namespace ${NAMESPACE}
@@ -273,16 +219,10 @@ kubectl get pod,sc,pvc,svc -n ${NAMESPACE}
 ```
 * Verify that the service is reachable through the load balancer IP address from outside the cluster:
 
-
-## UPDATE START
-
 ```sh
 IPAddr=$(kubectl get svc -n ${NAMESPACE} | grep -w nginx | awk '{print$4":"$5}' | awk -F: '{print$1":"$2}')
 curl http://${IPAddr} 2>/dev/null | grep "Thank you for using nginx"
 ```
-
-## UPDATE END
-
 
 ** An HTML encoded output should display the phrase "Thank you for using nginx."
 
@@ -297,14 +237,8 @@ kubectl exec -it ${TEST_POD} -n ${NAMESPACE} -- mount | grep test-vol
 * When finished with testing, delete the pod and service: 
 ```sh
 kubectl delete -f nginx-metallb-test.yaml
-
-## UPDATE START
-
 sleep 5
 kubectl delete namespace ${NAMESPACE}
-
-## UPDATE END
-
 ```
 
 
@@ -362,26 +296,14 @@ curl http://{$IPADDR}:15020
 *** At least one of the ports should return "404 page not found"
 ////
 
-
-## UPDATE START
-
 # Install kustomize 5.0.0 or higher
 
-## UPDATE END
-
-
 NOTE: The instructions for installing Kubeflow can be found at: `https://github.com/kubeflow/manifests#installation`
-
-
-## UPDATE START
 
 IMPORTANT: At the time of writing, Kubeflow requires kustomize version 5.0.0 or higher
 
 
 .Install kustomize 5.0.0 or higher on the Linux workstation:
-
-## UPDATE END
-
 * Find the lastest release of kustomize at https://github.com/kubernetes-sigs/kustomize/releases/
 * Adjust this variable for the appropriate release: `VERSION="v5.0.0"`
 *** Use the following commands to download and install kustomize for a Linux AMD/Intel workstation:
@@ -392,17 +314,8 @@ tar xvfz kustomize_${VERSION}_linux_amd64.tar.gz
 sudo mv kustomize /usr/bin
 ```
 
-
-## UPDATE START
-
 # Deploy Kubeflow
-
-## UPDATE END
-
 NOTE: The remainder of the procedure will require installing Kubeflow according to the instructions on the Kubeflow GitHub site, then returning to this document to enable TLS for HTTPS connections to the Kubeflow Dashboard.
-
-
-## UPDATE START
 
 IMPORTANT: Before running the first installation command, it is recommended to run `git status` in the `manifests` directory to ensure no unexpected changes have been made to this copy of the git repo. Additionally, it is recommeneded to remove the `manifests` directory and re-clone the repo between installation efforts.
 
@@ -458,28 +371,7 @@ user@example.com
 ** Check the Harvester dashboard to ensure the physical Harvester nodes are not overburdened or experiencing failures
 
 
-
-(Moved "Enable TLS (HTTPS) on Kubeflow")
-
-## UPDATE END
-
-
-## UPDATE START 
-(The procedure to create a TLS certificate and add it to the Istio gateway has been removed) 
-## UPDATE END
-
-
-
-
-## UPDATE START
-
 # Update Istio to use the MetalLB load balancer
-
-## UPDATE END
-
-
-## UPDATE START
-
 * Verify the current `istio-ingressgateway` service type (Likely `ClusterIP`):
 
 ```sh
@@ -544,12 +436,6 @@ spec:
       mode: SIMPLE
       credentialName: kubeflow-certificate-secret
 ```
- 
-## UPDATE END
-
-
-## UPDATE START
-
 # Update the AWS Route53 
 
 * Update the AWS Route53 DNS provider wih the Kubeflow IP address and the desired Fully Qualified Domain Name for the Kubeflow UI
@@ -785,6 +671,3 @@ kubectl rollout restart deployment -n istio-system istio-ingressgateway
 kubectl edit -n kubeflow gateways.networking.istio.io kubeflow-gateway
 ```
 ** Change `httpsRedirect: false` to `httpsRedirect: true`
-
-## UPDATE END
-
