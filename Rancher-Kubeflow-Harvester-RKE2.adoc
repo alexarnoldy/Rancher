@@ -16,7 +16,13 @@ IMPORTANT: This guide assumes Rancher Management Server is installed and configu
 . Verify the Kubeflow installation
 . Update Istio to use the MetalLB load balancer
 . Enable HTTPS on the Kubeflow Istio Gateway
-. Update the AWS Route53 
+
+# UPDATE START
+
+. Update AWS Route53
+
+# UPDATE END
+
 . Configure cert-manager to manage Let's Encrypt certificates, using Route 53 DNS records
 . Use a web browser to connect to Kubeflow UI with the Let's Encrypt Staging certificate
 . Update the configuration to use a Let's Encrypt production certificate
@@ -314,6 +320,16 @@ tar xvfz kustomize_${VERSION}_linux_amd64.tar.gz
 sudo mv kustomize /usr/bin
 ```
 
+# UPDATE START
+
+* Verify the kustomize version:
+```sh
+kustomize version
+
+# UPDATE END
+
+```
+
 # Deploy Kubeflow
 NOTE: The remainder of the procedure will require installing Kubeflow according to the instructions on the Kubeflow GitHub site, then returning to this document to enable TLS for HTTPS connections to the Kubeflow Dashboard.
 
@@ -436,7 +452,13 @@ spec:
       mode: SIMPLE
       credentialName: kubeflow-certificate-secret
 ```
-# Update the AWS Route53 
+
+# UPDATE START
+
+# Update AWS Route53
+
+# UPDATE END
+
 
 * Update the AWS Route53 DNS provider wih the Kubeflow IP address and the desired Fully Qualified Domain Name for the Kubeflow UI
 
@@ -526,15 +548,29 @@ kubectl apply -f letsencrypt-issuer.yaml
 
 * Create the Kubernetes secret containing the aws_secret_access_key for the AWS user:
 
+# UPDATE START
+
+
 ```sh
-kubectl create -n istio-system secret generic route53-credentials-secret --from-literal=secret-access-key=${AWS_SECRET_ACCESS_KEY}`
+kubectl create -n istio-system secret generic route53-credentials-secret --from-literal=secret-access-key=${AWS_SECRET_ACCESS_KEY}
 ```
+
+# UPDATE END
+
 
 * Verify the contents of the secret:
 ```sh
 kubectl get -n istio-system secret route53-credentials-secret -o jsonpath={.data.secret-access-key} | base64 -d; echo ""
 ```
 
+
+# UPDATE START
+
+(Removed the "Update OIDC to allow the Let’s Encrypt DNS01 challenge: section)
+
+# UPDATE END
+
+////
 ## Update OIDC to allow the Let's Encrypt DNS01 challenge:
 
 * From inside the Kubeflow `manifests` directory (i.e. the base directory from the cloned https://github.com/kubeflow/manifests repository), update the oidc-authservice params.env file:
@@ -558,6 +594,7 @@ sleep 5
 
 cp -p /tmp/params.env.orig common/oidc-authservice/base/params.env
 ```
+////
 
 * Verify the hostname for the certificate resolves correctly:
 ```sh
