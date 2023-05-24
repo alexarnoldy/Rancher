@@ -1,4 +1,4 @@
-### Current state of this doc (05/17/23): Constant flux
+### Current state of this doc (05/24/23): Seems pretty stable. Recent deployments had a few issues with python failures in Kubeflow pods, but almost definitely not due to this procedure.
 
 
 IMPORTANT: This guide assumes Rancher Management Server is installed and configured with Harvester under Rancher management, and an AWS Route53 DNS domain is available.
