@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 
 export KUBECONFIG=/home/opensuse/.kube/elemental.susealliances.com-local
