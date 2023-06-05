@@ -34,7 +34,7 @@ kubectl -n fleet-default get machineinventory -l arcade-location=null -o custom-
 
 COUNT=1
 
-END=$(expr $(grep -v '^\s' machines | wc -l | awk '{print$1}') + 1)
+END=$(expr $(grep [1-9] machines | wc -l | awk '{print$1}') + 1)
 
 echo ${COUNT}
 echo ${END}
