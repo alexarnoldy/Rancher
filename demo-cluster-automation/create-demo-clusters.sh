@@ -18,8 +18,8 @@
 ## If needed, set RANCHER_FQDN variable before running the script
 : ${RANCHER_FQDN="rancher.susealliances.com"}
 
-#DELETE_DELAY="2 hours"
-DELETE_DELAY="30 minutes"
+DELETE_DELAY="2 hours"
+#DELETE_DELAY="30 minutes"
 
 DATE=$(date +%m%d%H%M)
 

@@ -33,6 +33,8 @@ helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
 
 CHART_REPO="latest"
 
+helm repo update rancher-${CHART_REPO}
+
 helm search repo rancher-${CHART_REPO}
 
 echo ""
