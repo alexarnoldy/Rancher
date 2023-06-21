@@ -32,6 +32,10 @@ done
 
 kubectl -n fleet-default get machineinventory -l arcade-location=null -o custom-columns=:.metadata.name,:.status.plan.appliedChecksum | grep -v \<none\> | awk '{print$1}' > machines
 
+## Empty first line causes issues in the while loop. This removes it.
+grep [1-9] machines > machines.1
+mv machines.1 machines
+
 COUNT=1
 
 END=$(expr $(grep [1-9] machines | wc -l | awk '{print$1}') + 1)
