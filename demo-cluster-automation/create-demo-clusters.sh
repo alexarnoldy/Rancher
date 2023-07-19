@@ -13,7 +13,7 @@
 
 : ${RANCHER_AWS_CLOUD_CREDENTIAL="cc-48w6v"}
 : ${RANCHER_AZURE_CLOUD_CREDENTIAL="cc-wdcws"}
-: ${RANCHER_HARVESTER_CLOUD_CREDENTIAL="cc-rkwsw"}
+: ${RANCHER_HARVESTER_CLOUD_CREDENTIAL="cc-dhntz"}
 
 ## If needed, set RANCHER_FQDN variable before running the script
 : ${RANCHER_FQDN="rancher.susealliances.com"}
@@ -25,8 +25,12 @@ DATE=$(date +%m%d%H%M)
 
 CLUSTER_BASE_NAME="demo-${DATE}"
 
-## BEGIN Functions
+##
+###### BEGIN Functions
+##
 
+## This function envokes the at command directly, and the curl command is the same for all cluster, so 
+## it's easier to leave it here instead of including it with the other curl commands
 func_delete_cluster () {
 cat <<EOF | at now +${DELETE_DELAY}
 curl 'https://${RANCHER_FQDN}/v1/provisioning.cattle.io.clusters/fleet-default/${CLUSTER_NAME}' \
@@ -91,12 +95,28 @@ sleep 5
 rm /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
 }
 
-## END Functions
-#
+##
+###### END Functions
+##
 
-#
-## BEGIN create clusters
-#
+
+##
+###### BEGIN create clusters
+##
+
+echo "CURRENT $(env | grep ^TOKEN=)"
+
+echo ""
+
+read -n1 -p "Is this the bearer token for the correct user and Rancher server (Hint: Check the Access Key in the Rancher UI)? (y/n) " YESNO
+
+echo ""
+
+[ ${YESNO} != y ] && { echo "Exiting."; echo ""; exit; }
+
+echo "Continuing..."
+
+echo ""
 
 ## Possible platform options are: 
 # amazonec2
@@ -196,7 +216,7 @@ func_delete_cluster
 #rm /tmp/delete-cluster.sh
 #
 
-#
-## END create clusters
-#
+##
+###### END create clusters
+##
 
