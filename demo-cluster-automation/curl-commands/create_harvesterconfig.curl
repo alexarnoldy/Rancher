@@ -3,17 +3,16 @@ curl 'https://RANCHER_FQDN/v1/rke-machine-config.cattle.io.harvesterconfigs/flee
   -H 'accept: application/json' \
   -H 'accept-language: en-US,en;q=0.9' \
   -H 'content-type: application/json' \
-  -H 'cookie: R_PCS=light; R_LOCALE=en-us; R_REDIRECTED=true; CSRF=579230fcbcc0e6e8b54da2f4bd90b48d; R_SESS=TOKEN' \
+  -H 'cookie: R_PCS=light; R_LOCALE=en-us; R_REDIRECTED=true; CSRF=0280c8bb6e6f5dd8a81ac7535867db17; R_SESS=TOKEN' \
   -H 'origin: https://RANCHER_FQDN' \
   -H 'referer: https://RANCHER_FQDN/dashboard/c/_/manager/provisioning.cattle.io.cluster/create?type=harvester' \
-  -H 'sec-ch-ua: "Google Chrome";v="111", "Not(A:Brand";v="8", "Chromium";v="111"' \
+  -H 'sec-ch-ua: "Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115"' \
   -H 'sec-ch-ua-mobile: ?0' \
   -H 'sec-ch-ua-platform: "Windows"' \
   -H 'sec-fetch-dest: empty' \
   -H 'sec-fetch-mode: cors' \
   -H 'sec-fetch-site: same-origin' \
-  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36' \
-  -H 'x-api-csrf: 579230fcbcc0e6e8b54da2f4bd90b48d' \
-  --data-raw '{"cpuCount":"2","diskSize":"40","imageName":"demos/image-kq8z4","memorySize":"4","metadata":{"annotations":null,"finalizers":[],"generateName":"nc-CLUSTER_NAME-pool1-","labels":null,"managedFields":[],"namespace":"fleet-default","ownerReferences":[]},"networkName":"longterm-infrastructure/vlan240","sshUser":"sles","userData":"IyMjIGNsb3VkLWluaXQKI2Nsb3VkLWNvbmZpZwpjaHBhc3N3ZDoKICBsaXN0OiB8CiAgICByb290OlNVU0UKICAgIG9wZW5zdXNlOlNVU0UKICAgIHNsZXM6U1VTRQogIGV4cGlyZTogZmFsc2UKc3NoX2F1dGhvcml6ZWRfa2V5czoKICAtID4tCiAgICBzc2gtcnNhCiAgICBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCZ1FESW0zTkdtY09WTXFFVkhtdURYNitQQTNtaUJuMjBucmZrRCtuWXdXVHRrZHBoVGgyOFpoUmhGV1gyMS9vcmZsZzkzR3dHazRFeEUrNUwwd3F4QmhjMHdjN3VkbXpjOEhsTWs2ZnlwYm14Q082VzBRQjl0TE9uRkRpRU5MTmV0azdzS2ZFRUtIbGRFV3BGekowc3pVVEY1eDhIYnpJbHZidkthUnB6SmZCNVd2UUd3eDl1aEZGNkhGemxIVmZkWkdqWjJ4TGtaNUQzeWJkcWVIMjdlZWxYeGw3cUtQN0dHYUxDLzM5eHUzaUVrb3hidUt6WlB5SkZwTm5oMUNMUzhsa3M2K1IrVTMrZDRtblcwVEZ1L2JXTGhaam5lNTV5WUNpNHFuTWI1UUIxL3NOUXdYaUJGbFRVRHpsSjlUVFMwYk1IUmRCc29ra1pRVTUzbDBwZGRaUGNmNEhBVGh0NXNFMDV4LzF2dGNUYmFVWkU4S1VlRTRJT0ppbkYzWlFuaDFxL09IRXI5OGlUeXF1T0E4WDdlaGRnN01vRGJKMHJjcFJXWlBOem9hZThJeE9CTURLZWs2SjVkMUFUZXBPcmFKdEsyeVJ0WGJxNjh3UlBFZlFOSUhQSWNaY01XYzVaZUtmN21rMnAyTzRHdjNjMnEzY2hncHhMcG51TFRKdndiMzA9CiAgICBvcGVuc3VzZUBvcGVuc3VzZS1kZXNrdG9wCnJ1bmNtZDoKICAtIFNVU0VDb25uZWN0IC0tdXJsIGh0dHA6Ly9ybXQuZXhhbXBsZS5jb20KICAtIFNVU0VDb25uZWN0IC1wIHNsZS1tb2R1bGUtY29udGFpbmVycy8xNS40L3g4Nl82NAogIC0genlwcGVyIC1uIGluIC10IHBhdHRlcm4gYXBwYXJtb3IKICAtIHp5cHBlciAtbiBpbiBwb2RtYW4K","vmNamespace":"demos","type":"rke-machine-config.cattle.io.harvesterconfig"}' \
+  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36' \
+  -H 'x-api-csrf: 0280c8bb6e6f5dd8a81ac7535867db17' \
+  --data-raw '{"cpuCount":"4","diskInfo":"{\"disks\":[{\"imageName\":\"harvester-public/image-db55m\",\"bootOrder\":1,\"size\":40}]}","memorySize":"8","metadata":{"annotations":null,"finalizers":[],"generateName":"nc-CLUSTER_NAME-","labels":null,"managedFields":[],"namespace":"fleet-default","ownerReferences":[]},"networkInfo":"{\"interfaces\":[{\"networkName\":\"harvester-public/partner-network\",\"macAddress\":\"\"}]}","sshUser":"sles","userData":"IyMjIGNsb3VkLWluaXQKI2Nsb3VkLWNvbmZpZwpjaHBhc3N3ZDoKICBsaXN0OiB8CiAgICByb290OlNVU0UKICAgIHNsZXM6U1VTRQogIGV4cGlyZTogZmFsc2UKcnVuY21kOgogIC0gU1VTRUNvbm5lY3QgLS11cmwgaHR0cDovL3JtdC5zdGFibGUuc3VzZS5sYWIKICAtIHp5cHBlciAtbiBpbiAtdCBwYXR0ZXJuIGFwcGFybW9yCiAgLSB6eXBwZXIgLW4gaW4gaXB0YWJsZXMKICAtIHp5cHBlciAtbiB1cAogIC0genlwcGVyIGluIC0tZm9yY2UtcmVzb2x1dGlvbiAtLW5vLWNvbmZpcm0gLS1mb3JjZSBrZXJuZWwtZGVmYXVsdAogIC0gLSBzeXN0ZW1jdGwKICAgIC0gZW5hYmxlCiAgICAtIC0tbm93CiAgICAtIHFlbXUtZ3Vlc3QtYWdlbnQuc2VydmljZQpwYWNrYWdlX3VwZGF0ZTogdHJ1ZQpwYWNrYWdlczoKICAtIHFlbXUtZ3Vlc3QtYWdlbnQK","vmNamespace":"demo-environment","type":"rke-machine-config.cattle.io.harvesterconfig"}' \
   --compressed
-

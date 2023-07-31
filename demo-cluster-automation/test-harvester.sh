@@ -1,25 +1,36 @@
 #!/bin/bash
 #
 
-#
+## IMPORTANT: Ensure the TOKEN variable is set before running this script. The TOKEN needs to be the bearer token for a global admin user on the appropriate Rancher Management server.
 #
 
 ##
 ###### Base variables
 ##
 
+## If needed, set these variables for the cloud credentials saved in Rancher
+## Find the IDs for each credential in the Rancher UI: "Cluster Management" -> "Cloud Credentials"
+
+: ${RANCHER_AWS_CLOUD_CREDENTIAL="cc-48w6v"}
+: ${RANCHER_AZURE_CLOUD_CREDENTIAL="cc-wdcws"}
+: ${RANCHER_HARVESTER_CLOUD_CREDENTIAL="cc-dhntz"}
+
 ## If needed, set RANCHER_FQDN variable before running the script
 : ${RANCHER_FQDN="rancher.susealliances.com"}
 
 DELETE_DELAY="2 hours"
-#DELETE_DELAY="10 minutes"
+#DELETE_DELAY="30 minutes"
 
 DATE=$(date +%m%d%H%M)
 
 CLUSTER_BASE_NAME="demo-${DATE}"
 
-## BEGIN Functions
+##
+###### BEGIN Functions
+##
 
+## This function envokes the at command directly, and the curl command is the same for all cluster, so 
+## it's easier to leave it here instead of including it with the other curl commands
 func_delete_cluster () {
 cat <<EOF | at now +${DELETE_DELAY}
 curl 'https://${RANCHER_FQDN}/v1/provisioning.cattle.io.clusters/fleet-default/${CLUSTER_NAME}' \
@@ -42,20 +53,27 @@ curl 'https://${RANCHER_FQDN}/v1/provisioning.cattle.io.clusters/fleet-default/$
 EOF
 }
 
+
+
 func_create_rke2_cluster () {
 ## Render the correct command to create the *Config resource (k api-resources | grep -i rke-machine-config   to see all)
 
-cat curl-commands/create_${PLATFORM}config.curl | sed "s/TOKEN/${TOKEN}/g" | sed "s/CLUSTER_NAME/${CLUSTER_NAME}/g" > /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
+cat curl-commands/create_${PLATFORM}config.curl | sed "s/RANCHER_FQDN/${RANCHER_FQDN}/g" | sed "s/TOKEN/${TOKEN}/g" | sed "s/CLUSTER_NAME/${CLUSTER_NAME}/g" > /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
 
 ## Create the *Config resource
 POOL_NAME=$(bash /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh | jq '.id' | sed 's/\"//g' | awk -F\/ '{print$2}')
 
-## Get the name of the *Config resource
+
+##### No longer needed
+#bash /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
+### Get the name of the *Config resource
 #kubectl config use-context rancher-demo
 #POOL_NAME=$(kubectl get ${PLATFORM}config.rke-machine-config.cattle.io -n fleet-default | grep nc-${CLUSTER_NAME}-pool1 | awk '{print$1}')
+##### No longer needed
+
 
 ## Create the cluster resource
-cat curl-commands/create_${PLATFORM}_rke2_cluster.curl | sed "s/TOKEN/${TOKEN}/g" | sed "s/CLUSTER_NAME/${CLUSTER_NAME}/g" | sed "s/POOL_NAME/${POOL_NAME}/g" > /tmp/${PLATFORM}-${CLUSTER_NAME}-cluster.sh
+cat curl-commands/create_${PLATFORM}_rke2_cluster.curl | sed "s/RANCHER_FQDN/${RANCHER_FQDN}/g" | sed "s/TOKEN/${TOKEN}/g" | sed "s/CLUSTER_NAME/${CLUSTER_NAME}/g" | sed "s/POOL_NAME/${POOL_NAME}/g" | sed "s/RANCHER_AWS_CLOUD_CREDENTIAL/${RANCHER_AWS_CLOUD_CREDENTIAL}/g" | sed "s/RANCHER_AZURE_CLOUD_CREDENTIAL/${RANCHER_AZURE_CLOUD_CREDENTIAL}/g" | sed "s/RANCHER_HARVESTER_CLOUD_CREDENTIAL/${RANCHER_HARVESTER_CLOUD_CREDENTIAL}/g" > /tmp/${PLATFORM}-${CLUSTER_NAME}-cluster.sh
 
 bash /tmp/${PLATFORM}-${CLUSTER_NAME}-cluster.sh
 
@@ -64,10 +82,12 @@ rm /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
 rm /tmp/${PLATFORM}-${CLUSTER_NAME}-cluster.sh
 }
 
+
+
 func_create_hosted_k8s_cluster () {
 ## Render the correct command to create the hosted cluster
 
-cat curl-commands/create_${PLATFORM}_cluster.curl | sed "s/TOKEN/${TOKEN}/g"  | sed "s/CLUSTER_NAME/${CLUSTER_NAME}/g" > /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
+cat curl-commands/create_${PLATFORM}_cluster.curl | sed "s/RANCHER_FQDN/${RANCHER_FQDN}/g" | sed "s/TOKEN/${TOKEN}/g"  | sed "s/CLUSTER_NAME/${CLUSTER_NAME}/g" | sed "s/RANCHER_AWS_CLOUD_CREDENTIAL/${RANCHER_AWS_CLOUD_CREDENTIAL}/g" | sed "s/RANCHER_AZURE_CLOUD_CREDENTIAL/${RANCHER_AZURE_CLOUD_CREDENTIAL}/g" > /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
 
 bash /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
 
@@ -75,12 +95,28 @@ sleep 5
 rm /tmp/${PLATFORM}-${CLUSTER_NAME}-config.sh
 }
 
-## END Functions
-#
+##
+###### END Functions
+##
 
-#
-## BEGIN create clusters
-#
+
+##
+###### BEGIN create clusters
+##
+
+echo "CURRENT $(env | grep ^TOKEN=)"
+
+echo ""
+
+read -n1 -p "Is this the bearer token for the correct user and Rancher server (Hint: Check the Access Key in the Rancher UI)? (y/n) " YESNO
+
+echo ""
+
+[ ${YESNO} != y ] && { echo "Exiting."; echo ""; exit; }
+
+echo "Continuing..."
+
+echo ""
 
 ## Possible platform options are: 
 # amazonec2
@@ -103,4 +139,8 @@ CLUSTER_NAME="${CLUSTER_BASE_NAME}-${PLATFORM}"
 func_create_rke2_cluster 
 
 func_delete_cluster
+
+##
+###### END create clusters
+##
 
