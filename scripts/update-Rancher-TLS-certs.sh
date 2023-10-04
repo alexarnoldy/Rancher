@@ -26,7 +26,7 @@ echo "Cluster name: $(kubectl --insecure-skip-tls-verify config current-context)
 
 echo ""
 
-kubectl --insecure-skip-tls-verify get nodes
+kubectl --insecure-skip-tls-verify get nodes -o wide
 
 echo ""
 

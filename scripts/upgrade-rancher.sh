@@ -11,7 +11,7 @@ echo "Cluster name: $(kubectl config current-context)"
 
 echo ""
 
-kubectl get nodes
+kubectl get nodes -o wide 
 
 echo ""
 
