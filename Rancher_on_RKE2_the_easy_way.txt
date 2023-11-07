@@ -3,6 +3,8 @@
 
 sudo zypper -n up
 
+(for SLE Micro use transactional-update up)
+
 sudo reboot
 
 echo "export KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> ~/.bashrc
@@ -18,6 +20,7 @@ nslookup ${FQDN}   # Should show the public IP associated with the FQDN
 
 sudo bash -c "cat <<EOF>  /etc/rancher/rke2/config.yaml
 write-kubeconfig-mode: "0644"
+token: RKE2-HA-4-Me
 tls-san:
   - "${FQDN}"
 EOF"
@@ -26,7 +29,7 @@ cat /etc/rancher/rke2/config.yaml
 
 ## Pick a release of RKE2 from: https://github.com/rancher/rke2/releases
 
-RKE2_RELEASE=""
+export RKE2_RELEASE=""
 
 sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" sh -"
 
@@ -39,7 +42,34 @@ sudo chown -R ${USER} ~/.kube/
 echo "export KUBECONFIG=~/.kube/config" >> ~/.bashrc
 source ~/.bashrc
 
-## After RKE2 is up and running (verify with watch -c kubectl get pods -A):
+## Continue after RKE2 is up and running (verify with watch -c kubectl get pods -A)
+
+## (Optional) Add server and/or worker nodes:
+sudo zypper -n up
+
+(for SLE Micro use transactional-update up)
+
+sudo reboot
+
+sudo mkdir -p  /etc/rancher/rke2/
+
+export FIRST_RKE2_NODE=""
+sudo bash -c "cat <<EOF>  /etc/rancher/rke2/config.yaml
+write-kubeconfig-mode: "0644"
+token: RKE2-HA-4-Me
+server: https://${FIRST_RKE2_NODE}
+EOF"
+
+export RKE2_RELEASE=""
+
+Server (aka control-plane) nodes:
+sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" INSTALL_RKE2_TYPE="server" sh -"
+
+Agent (aka worker) nodes:
+sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" INSTALL_RKE2_TYPE="agent" sh -"
+
+
+## Install Rancher server:
 
 kubectl create namespace cattle-system
 
