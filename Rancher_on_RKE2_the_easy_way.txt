@@ -65,8 +65,14 @@ export RKE2_RELEASE=""
 Server (aka control-plane) nodes:
 sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" INSTALL_RKE2_TYPE="server" sh -"
 
+sudo systemctl enable --now rke2-server.service
+
+
 Agent (aka worker) nodes:
 sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" INSTALL_RKE2_TYPE="agent" sh -"
+
+sudo systemctl enable --now rke2-agent.service
+
 
 
 ## Install Rancher server:
