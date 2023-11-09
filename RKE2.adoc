@@ -56,7 +56,14 @@ node-label:
 3. systemctl enable --now rke2-server.service
 * export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
 
+## Can't join an agent node with error: "Failed to configure agent: Node password rejected, duplicate hostname or contents RKE2/K3S"
 
+----
+kubectl -n kube-system delete secrets <agent-node-name>.node-password.rke2
+----
+----
+kubectl -n kube-system delete secrets <agent-node-name>.node-password.k3
+----
 ## Troubleshooting:
 
 * Uses the same containerd CRI socket as K3s: 
