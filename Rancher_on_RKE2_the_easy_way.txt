@@ -54,10 +54,11 @@ sudo reboot
 sudo mkdir -p  /etc/rancher/rke2/
 
 export FIRST_RKE2_NODE=""
+
 sudo bash -c "cat <<EOF>  /etc/rancher/rke2/config.yaml
 write-kubeconfig-mode: "0644"
 token: RKE2-HA-4-Me
-server: https://${FIRST_RKE2_NODE}
+server: https://${FIRST_RKE2_NODE}:9345
 EOF"
 
 export RKE2_RELEASE=""
