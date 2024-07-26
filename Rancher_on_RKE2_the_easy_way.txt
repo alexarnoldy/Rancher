@@ -160,6 +160,7 @@ helm install rancher rancher-latest/rancher --version ${RANCHER_CHART_VERSION} $
 export RKE2_RELEASE="v1.30.2+rke2r1"
 export FIRST_RKE2_NODE=""
 
+mkdir -p /etc/rancher/rke2/
 sudo bash -c "cat <<EOF>  /etc/rancher/rke2/config.yaml
 write-kubeconfig-mode: "0644"
 server: https://${FIRST_RKE2_NODE}:9345
@@ -174,6 +175,7 @@ sudo systemctl enable --now rke2-server.service
 export RKE2_RELEASE="v1.30.2+rke2r1"
 export FIRST_RKE2_NODE=""
 
+mkdir -p /etc/rancher/rke2/
 sudo bash -c "cat <<EOF>  /etc/rancher/rke2/config.yaml
 write-kubeconfig-mode: "0644"
 server: https://${FIRST_RKE2_NODE}:9345
