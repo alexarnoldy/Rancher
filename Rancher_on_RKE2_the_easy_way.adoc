@@ -1,0 +1,316 @@
+= Installation Instructions for RKE2 on SUSE Linux Enterprise
+:toc: macro
+:toclevels: 2
+:sectanchors:
+
+== Overview
+
+This installation assumes running on SUSE Linux Enterprise and using a TLS cert issued by a public CA, such as Let's Encrypt. Some small adjustments will have to be made if not meeting these two expectations.
+
+== System Update
+
+```bash
+sudo zypper -n up
+```
+(for SLE Micro use `transactional-update up`)
+
+```bash
+sudo reboot
+```
+
+== Environment Setup
+
+```bash
+echo "export KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> ~/.bashrc
+echo "PATH=${PATH}:/opt/rke2/bin:/var/lib/rancher/rke2/bin/" >> ~/.bashrc && source  ~/.bashrc
+```
+
+```bash
+sudo mkdir -p /etc/rancher/rke2/
+```
+
+// Enter your FQDN within the quotes
+.FQDN
+```
+FQDN=""
+```
+
+== DNS Check
+
+```bash
+nslookup ${FQDN}   # Should show the public IP associated with the FQDN
+```
+
+== Configuration
+
+```bash
+sudo bash -c "cat <<EOF > /etc/rancher/rke2/config.yaml
+write-kubeconfig-mode: "0644"
+token: RKE2-HA-4-Me
+tls-san:
+  - "${FQDN}"
+EOF"
+```
+
+```bash
+cat /etc/rancher/rke2/config.yaml
+```
+
+== RKE2 Release
+
+Pick a release of RKE2 from: https://github.com/rancher/rke2/releases
+
+```bash
+export RKE2_RELEASE=""
+```
+
+== Installation of RKE2
+
+```bash
+sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" sh -"
+```
+
+```bash
+sudo systemctl enable --now rke2-server.service
+```
+
+```bash
+mkdir -p ~/.kube
+```
+
+```bash
+sudo cp /etc/rancher/rke2/rke2.yaml ~/.kube/config
+sudo chown -R ${USER} ~/.kube/
+echo "export KUBECONFIG=~/.kube/config" >> ~/.bashrc
+source ~/.bashrc
+```
+
+== Post-Installation
+
+Continue after RKE2 is up and running (verify with `watch -c kubectl get pods -A`).
+
+=== Adding Nodes (Optional)
+
+```bash
+sudo zypper -n up
+```
+(for SLE Micro use `transactional-update up`)
+
+```bash
+sudo reboot
+```
+
+```bash
+sudo mkdir -p /etc/rancher/rke2/
+```
+
+```bash
+export FIRST_RKE2_NODE=""
+```
+
+```bash
+sudo bash -c "cat <<EOF > /etc/rancher/rke2/config.yaml
+write-kubeconfig-mode: "0644"
+token: RKE2-HA-4-Me
+server: https://${FIRST_RKE2_NODE}:9345
+EOF"
+```
+
+```bash
+export RKE2_RELEASE=""
+```
+
+==== Server (Control-Plane) Nodes
+
+```bash
+sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" INSTALL_RKE2_TYPE="server" sh -"
+```
+
+```bash
+sudo systemctl enable --now rke2-server.service
+```
+
+==== Agent (Worker) Nodes
+
+```bash
+sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" INSTALL_RKE2_TYPE="agent" sh -"
+```
+
+```bash
+sudo systemctl enable --now rke2-agent.service
+```
+
+== Install Rancher Server
+
+```bash
+kubectl create namespace cattle-system
+```
+
+The following commands assume the public TLS certificate, normally named `fullchain.pem`, exists in the local directory as `tls.crt`, and the associated private key, normally named `privkey.pem`, exists in the local directory as `tls.key`.
+
+Examine the TLS cert, if desired:
+
+```bash
+openssl x509 -noout --text -in tls.crt | less
+```
+
+```bash
+kubectl -n cattle-system create secret tls tls-rancher-ingress \
+  --cert=tls.crt \
+  --key=tls.key
+```
+
+// Note that helm is only available (AFAICT) in PackageHub and software.opensuse.org
+
+// source /etc/os-release
+// sudo SUSEConnect -p PackageHub/${VERSION_ID}/x86_64
+
+=== Install Helm
+
+```bash
+sudo zypper -n in helm
+```
+
+NOTE: Adjust the following command to use the `rancher-stable` or `rancher-alpha` repos, if you prefer:
+
+```bash
+helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+```
+
+== Set the Bootstrap Password
+
+```bash
+BOOTSTRAPPW="Rancher4Me"  
+```
+
+Find the version of Rancher you want to install:
+
+```bash
+helm search repo rancher-latest --versions | less
+```
+
+```bash
+RANCHER_CHART_VERSION=""    # CHART VERSION not APP VERSION
+SET_DEVEL_FLAG=""     # Set to --devel for access to development features
+```
+
+Verify the variables before running the helm installation:
+
+```bash
+echo ${RANCHER_CHART_VERSION}; echo ${SET_DEVEL_FLAG}; echo ${FQDN}; echo ${BOOTSTRAPPW}
+```
+
+== Install Rancher with Helm
+
+```bash
+helm install rancher rancher-latest/rancher --version ${RANCHER_CHART_VERSION} ${SET_DEVEL_FLAG} \
+  --namespace cattle-system \
+  --set hostname=${FQDN} \
+  --set bootstrapPassword=${BOOTSTRAPPW} \
+  --set ingress.tls.source=secret
+```
+
+// Rancher server consists of two deployments, rancher and rancher-webhook
+
+```bash
+watch -c kubectl -n cattle-system get deploy
+```
+
+Log into the Rancher web UI at ${FQDN} and the user `admin` with a password of ${BOOTSTRAPPW}.
+
+== Just Installing RKE2
+
+=== First Node
+
+```bash
+export RKE2_RELEASE="v1.30.2+rke2r1"
+```
+
+```bash
+echo "export KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> ~/.bashrc
+echo "PATH=${PATH}:/opt/rke2/bin:/var/lib/rancher/rke2/bin/" >> ~/.bashrc && source  ~/.bashrc
+```
+
+```bash
+sudo mkdir -p /etc/rancher/rke2/
+```
+
+```bash
+sudo bash -c "cat <<EOF > /etc/rancher/rke2/config.yaml
+write-kubeconfig-mode: "0644"
+token: RKE2-HA-4-Me
+EOF"
+```
+
+```bash
+sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" sh -"
+```
+
+```bash
+sudo systemctl enable --now rke2-server.service
+```
+
+```bash
+mkdir -p ~/.kube
+```
+
+```bash
+sudo cp /etc/rancher/rke2/rke2.yaml ~/.kube/config
+sudo chown -R ${USER} ~/.kube/
+echo "export KUBECONFIG=~/.kube/config" >> ~/.bashrc
+source ~/.bashrc
+```
+
+=== Servers
+
+```bash
+export RKE2_RELEASE="v1.30.2+rke2r1"
+export FIRST_RKE2_NODE=""
+```
+
+```bash
+mkdir -p /etc/rancher/rke2/
+```
+
+```bash
+sudo bash -c "cat <<EOF > /etc/rancher/rke2/config.yaml
+write-kubeconfig-mode: "0644"
+server: https://${FIRST_RKE2_NODE}:9345
+token: RKE2-HA-4-Me
+EOF"
+```
+
+```bash
+sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" INSTALL_RKE2_TYPE="server" sh -"
+```
+
+```bash
+sudo systemctl enable --now rke2-server.service
+```
+
+=== Agents
+
+```bash
+export RKE2_RELEASE="v1.30.2+rke2r1"
+export FIRST_RKE2_NODE=""
+```
+
+```bash
+mkdir -p /etc/rancher/rke2/
+```
+
+```bash
+sudo bash -c "cat <<EOF > /etc/rancher/rke2/config.yaml
+write-kubeconfig-mode: "0644"
+server: https://${FIRST_RKE2_NODE}:9345
+token: RKE2-HA-4-Me
+EOF"
+```
+
+```bash
+sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" INSTALL_RKE2_TYPE="agent" sh -"
+```
+
+```bash
+sudo systemctl enable --now rke2-agent.service
+```
