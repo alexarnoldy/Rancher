@@ -269,7 +269,7 @@ export FIRST_RKE2_NODE=""
 ```
 
 ```bash
-mkdir -p /etc/rancher/rke2/
+sudo mkdir -p /etc/rancher/rke2/
 ```
 
 ```bash
@@ -296,7 +296,7 @@ export FIRST_RKE2_NODE=""
 ```
 
 ```bash
-mkdir -p /etc/rancher/rke2/
+sudo mkdir -p /etc/rancher/rke2/
 ```
 
 ```bash
