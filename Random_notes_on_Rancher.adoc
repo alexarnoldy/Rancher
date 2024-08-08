@@ -85,21 +85,17 @@ IMPORTANT: When creating secrets through Rancher UI, do not base64 encode the ad
  
 == Remove clusters that won't delete in the Rancher UI:
 * Associate resource names with clusterNames (not a bad idea to compare the two): 
-** `kubectl get clusters.management.cattle.io -o custom-columns=:.spec.displayName,:.metadata.name --no-headers | grep -v local | sort`
+** `kubectl -n fleet-default get clusters -o custom-columns=CLUSTER_NAME:.metadata.name,:.status.clusterName  | sort`
 ** -OR-
-** `kubectl -n fleet-default get clusters -o custom-columns=:.metadata.name,:.status.clusterName --no-headers | sort1`
-* Must remove from two places:
-** `kubectl -n fleet-default get clusters`
-** `kubectl get clusters.management.cattle.io`
-** To associate clusters that don't have common names: ` kubectl -n fleet-default get clusters -o yaml  | grep clusterName`
+** `kubectl get clusters.management.cattle.io -o custom-columns=MANAGEMENT_NAME:.metadata.name,:.spec.displayName  | grep -v local | sort`
 
 * Remove in two places by patching the finalizers with an empty array []:
-** `kubectl -n fleet-default get clusters`
-*** `export CLUSTERNAME=""`
-*** `kubectl -n fleet-default patch clusters ${CLUSTERNAME} -p '{"metadata":{"finalizers":[]}}' --type=merge`
-** `kubectl get clusters.management.cattle.io`
-*** `export CLUSTERNAME=""`
-*** `kubectl patch clusters.management.cattle.io ${CLUSTERNAME} -p '{"metadata":{"finalizers":[]}}' --type=merge`
+** `kubectl -n fleet-default get clusters -o custom-columns=CLUSTER_NAME:.metadata.name,:.status.clusterName  | sort`
+*** `export CLUSTER_NAME=""`
+*** `kubectl -n fleet-default patch clusters ${CLUSTER_NAME} -p '{"metadata":{"finalizers":[]}}' --type=merge`
+** `kubectl get clusters.management.cattle.io -o custom-columns=MANAGEMENT_NAME:.metadata.name,:.spec.displayName  | grep -v local | sort`
+*** `export MANAGEMENT_NAME=""`
+*** `kubectl patch clusters.management.cattle.io ${MANAGEMENT_NAME} -p '{"metadata":{"finalizers":[]}}' --type=merge`
 
 NOTE: May need to log out and back in for all remnants to disappear.
 
