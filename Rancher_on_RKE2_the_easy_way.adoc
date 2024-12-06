@@ -81,7 +81,9 @@ mkdir -p ~/.kube
 ```bash
 sudo cp /etc/rancher/rke2/rke2.yaml ~/.kube/config
 sudo chown -R ${USER} ~/.kube/
+echo ""
 echo "export KUBECONFIG=~/.kube/config" >> ~/.bashrc
+echo ""
 source ~/.bashrc
 ```
 
