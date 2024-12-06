@@ -21,8 +21,8 @@ sudo reboot
 == Environment Setup
 
 ```bash
-echo "export KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> ~/.bashrc
-echo "PATH=${PATH}:/opt/rke2/bin:/var/lib/rancher/rke2/bin/" >> ~/.bashrc && source  ~/.bashrc
+echo "export KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> ${HOME}/.bashrc
+echo "PATH=${PATH}:/opt/rke2/bin:/var/lib/rancher/rke2/bin/" >> ${HOME}/.bashrc && source  ${HOME}/.bashrc
 ```
 
 ```bash
@@ -75,16 +75,16 @@ sudo systemctl enable --now rke2-server.service
 ```
 
 ```bash
-mkdir -p ~/.kube
+mkdir -p ${HOME}/.kube
 ```
 
 ```bash
-sudo cp /etc/rancher/rke2/rke2.yaml ~/.kube/config
-sudo chown -R ${USER} ~/.kube/
+sudo cp /etc/rancher/rke2/rke2.yaml ${HOME}/.kube/config
+sudo chown -R ${USER} ${HOME}/.kube/
 echo ""
-echo "export KUBECONFIG=~/.kube/config" >> ~/.bashrc
+echo "export KUBECONFIG=${HOME}/.kube/config" >> ${HOME}/.bashrc
 echo ""
-source ~/.bashrc
+source ${HOME}/.bashrc
 ```
 
 == Post-Installation
@@ -229,8 +229,8 @@ export RKE2_RELEASE="v1.30.2+rke2r1"
 ```
 
 ```bash
-echo "export KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> ~/.bashrc
-echo "PATH=${PATH}:/opt/rke2/bin:/var/lib/rancher/rke2/bin/" >> ~/.bashrc && source  ~/.bashrc
+echo "export KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> ${HOME}/.bashrc
+echo "PATH=${PATH}:/opt/rke2/bin:/var/lib/rancher/rke2/bin/" >> ${HOME}/.bashrc && source  ${HOME}/.bashrc
 ```
 
 ```bash
@@ -253,14 +253,14 @@ sudo systemctl enable --now rke2-server.service
 ```
 
 ```bash
-mkdir -p ~/.kube
+mkdir -p ${HOME}/.kube
 ```
 
 ```bash
-sudo cp /etc/rancher/rke2/rke2.yaml ~/.kube/config
-sudo chown -R ${USER} ~/.kube/
-echo "export KUBECONFIG=~/.kube/config" >> ~/.bashrc
-source ~/.bashrc
+sudo cp /etc/rancher/rke2/rke2.yaml ${HOME}/.kube/config
+sudo chown -R ${USER} ${HOME}/.kube/
+echo "export KUBECONFIG=${HOME}/.kube/config" >> ${HOME}/.bashrc
+source ${HOME}/.bashrc
 ```
 
 === Servers
