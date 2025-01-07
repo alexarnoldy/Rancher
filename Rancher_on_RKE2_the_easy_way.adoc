@@ -221,6 +221,12 @@ NOTE: Adjust the following command to use the `rancher-stable` or `rancher-alpha
 helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
 ```
 
+. Update your local Helm chart repository cache
+
+```bash
+helm repo update
+```
+
 == Set the Bootstrap Password
 
 ```bash
