@@ -242,7 +242,7 @@ helm search repo rancher-latest --versions | more
 ```bash
 RANCHER_CHART_VERSION=""    # CHART VERSION not APP VERSION
 SET_DEVEL_FLAG=""     # Set to --devel for access to development features
-TLS_SOURCE=""         # Set to "--set ingress.tls.source=secret" if using External (BYO) Certificates
+TLS_SOURCE=""         # Leave blank for Rancher Certificates, set to "--set ingress.tls.source=secret" if using External (BYO) Certificates
 ```
 
 Verify the variables before running the helm installation:
