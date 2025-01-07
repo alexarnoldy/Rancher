@@ -248,7 +248,7 @@ TLS_SOURCE=""         # Leave blank for Rancher Certificates, set to "--set ingr
 Verify the variables before running the helm installation:
 
 ```bash
-echo ${RANCHER_CHART_VERSION}; echo ${SET_DEVEL_FLAG}; echo ${FQDN}; echo ${BOOTSTRAPPW}
+echo "RANCHER_CHART_VERSION="${RANCHER_CHART_VERSION}; echo "RANCHER_CHART_VERSION="${SET_DEVEL_FLAG}; echo "FQDN="${FQDN}; echo "TLS_SOURCE="${TLS_SOURCE}; echo "BOOTSTRAPPW="${BOOTSTRAPPW}
 ```
 
 == Install Rancher with Helm
