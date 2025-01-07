@@ -84,12 +84,21 @@ sudo chown -R ${USER} ${HOME}/.kube/
 ```
 ```bash
 echo "export KUBECONFIG=${HOME}/.kube/config" >> ${HOME}/.bashrc
+```
+
+```bash
 source ${HOME}/.bashrc
+```
+
+Verify RKE2 is installed and running correctly:
+
+```bash
+watch -c kubectl get pods -A
 ```
 
 == Post-Installation
 
-Continue after RKE2 is up and running (verify with `watch -c kubectl get pods -A`).
+Continue after RKE2 is installed and running correctly.
 
 === Adding Nodes (Optional)
 
