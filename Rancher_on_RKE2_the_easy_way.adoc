@@ -142,19 +142,27 @@ sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEA
 sudo systemctl enable --now rke2-agent.service
 ```
 
-== Install Rancher Server
+= Install Rancher Server
+
+== Install Helm
 
 ```bash
-kubectl create namespace cattle-system
+sudo zypper -n in helm
 ```
 
-The following commands assume the public TLS certificate, normally named `fullchain.pem`, exists in the local directory as `tls.crt`, and the associated private key, normally named `privkey.pem`, exists in the local directory as `tls.key`.
+IMPORTANT: Select only one of "External (Bring Your Own) Certificates" OR "Rancher-generated TLS certificates" for TLS certificate management appropriate for your installation. See https://ranchermanager.docs.rancher.com/getting-started/installation-and-upgrade/install-upgrade-on-a-kubernetes-cluster#3-choose-your-ssl-configuration for more information.
 
-Examine the TLS cert, if desired:
+=== External (Bring Your Own) Certificates:
+
+. The following commands assume the public TLS certificate, normally named `fullchain.pem`, exists in the local directory as `tls.crt`, and the associated private key, normally named `privkey.pem`, exists in the local directory as `tls.key`.
+
+. Examine the TLS cert, if desired:
 
 ```bash
 openssl x509 -noout --text -in tls.crt | less
 ```
+
+. Create the secret containing the certificate and key:
 
 ```bash
 kubectl -n cattle-system create secret tls tls-rancher-ingress \
@@ -167,11 +175,36 @@ kubectl -n cattle-system create secret tls tls-rancher-ingress \
 // source /etc/os-release
 // sudo SUSEConnect -p PackageHub/${VERSION_ID}/x86_64
 
-=== Install Helm
+=== Rancher-generated TLS certificates:
+
+. Add the Jetstack Helm repository:
 
 ```bash
-sudo zypper -n in helm
+helm repo add jetstack https://charts.jetstack.io
 ```
+
+. Update your local Helm chart repository cache
+
+```bash
+helm repo update
+```
+
+. Install the cert-manager Helm chart:
+
+```bash
+helm install cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --set crds.enabled=true
+```
+
+. Verify the cert-manager installation:
+
+```bash
+kubectl get pods --namespace cert-manager
+```
+
+== Install the Rancher Helm chart:
 
 NOTE: Adjust the following command to use the `rancher-stable` or `rancher-alpha` repos, if you prefer:
 
@@ -188,12 +221,13 @@ BOOTSTRAPPW="Rancher4Me"
 Find the version of Rancher you want to install:
 
 ```bash
-helm search repo rancher-latest --versions | less
+helm search repo rancher-latest --versions | more
 ```
 
 ```bash
 RANCHER_CHART_VERSION=""    # CHART VERSION not APP VERSION
 SET_DEVEL_FLAG=""     # Set to --devel for access to development features
+TLS_SOURCE=""         # Set to "--set ingress.tls.source=secret" if using External (BYO) Certificates
 ```
 
 Verify the variables before running the helm installation:
@@ -205,11 +239,16 @@ echo ${RANCHER_CHART_VERSION}; echo ${SET_DEVEL_FLAG}; echo ${FQDN}; echo ${BOOT
 == Install Rancher with Helm
 
 ```bash
+kubectl create namespace cattle-system
+```
+
+```bash
 helm install rancher rancher-latest/rancher --version ${RANCHER_CHART_VERSION} ${SET_DEVEL_FLAG} \
   --namespace cattle-system \
   --set hostname=${FQDN} \
-  --set bootstrapPassword=${BOOTSTRAPPW} \
-  --set ingress.tls.source=secret
+    ${TLS_SOURCE} \
+  --set bootstrapPassword=${BOOTSTRAPPW}
+
 ```
 
 // Rancher server consists of two deployments, rancher and rancher-webhook
