@@ -163,15 +163,15 @@ IMPORTANT: Select only one of "External (Bring Your Own) Certificates" OR "Ranch
 
 === External (Bring Your Own) Certificates:
 
-. The following commands assume the public TLS certificate, normally named `fullchain.pem`, exists in the local directory as `tls.crt`, and the associated private key, normally named `privkey.pem`, exists in the local directory as `tls.key`.
+* The following commands assume the public TLS certificate, normally named `fullchain.pem`, exists in the local directory as `tls.crt`, and the associated private key, normally named `privkey.pem`, exists in the local directory as `tls.key`.
 
-. Examine the TLS cert, if desired:
+* Examine the TLS cert, if desired:
 
 ```bash
 openssl x509 -noout --text -in tls.crt | less
 ```
 
-. Create the secret containing the certificate and key:
+* Create the secret containing the certificate and key:
 
 ```bash
 kubectl -n cattle-system create secret tls tls-rancher-ingress \
@@ -186,19 +186,19 @@ kubectl -n cattle-system create secret tls tls-rancher-ingress \
 
 === Rancher-generated TLS certificates:
 
-. Add the Jetstack Helm repository:
+* Add the Jetstack Helm repository:
 
 ```bash
 helm repo add jetstack https://charts.jetstack.io
 ```
 
-. Update your local Helm chart repository cache
+* Update your local Helm chart repository cache
 
 ```bash
 helm repo update
 ```
 
-. Install the cert-manager Helm chart:
+* Install the cert-manager Helm chart:
 
 ```bash
 helm install cert-manager jetstack/cert-manager \
@@ -207,7 +207,7 @@ helm install cert-manager jetstack/cert-manager \
   --set crds.enabled=true
 ```
 
-. Verify the cert-manager installation:
+* Verify the cert-manager installation:
 
 ```bash
 kubectl get pods --namespace cert-manager
@@ -221,19 +221,19 @@ NOTE: Adjust the following command to use the `rancher-stable` or `rancher-alpha
 helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
 ```
 
-. Update your local Helm chart repository cache
+* Update your local Helm chart repository cache
 
 ```bash
 helm repo update
 ```
 
-== Set the Bootstrap Password
+=== Set the Bootstrap Password
 
 ```bash
 BOOTSTRAPPW="Rancher4Me"  
 ```
 
-Find the version of Rancher you want to install:
+=== Find the version of Rancher you want to install:
 
 ```bash
 helm search repo rancher-latest --versions | more
@@ -274,7 +274,32 @@ watch -c kubectl -n cattle-system get deploy
 
 Log into the Rancher web UI at ${FQDN} and the user `admin` with a password of ${BOOTSTRAPPW}.
 
-== Just Installing RKE2
+== Upgrading to Rancher Prime:
+
+* Remove the rancher-latest, rancher-stable, or rancher-alpha repo:
+
+```bash
+COMMUNITY_REPO=$(helm repo list | egrep "rancher-latest|rancher-stable|rancher-alpha" | awk '{print$1}')
+
+```
+
+```bash
+helm repo remove ${COMMUNITY_REPO}
+```
+
+```bash
+helm repo add rancher-prime https://charts.rancher.com/server-charts/prime
+```
+
+```bash
+helm get values rancher --namespace cattle-system -o yaml > values.yaml
+```
+
+```bash
+helm upgrade rancher rancher-prime/rancher --namespace cattle-system --values values.yaml --version=2.9
+```
+
+= Just Installing RKE2
 
 === First Node
 
