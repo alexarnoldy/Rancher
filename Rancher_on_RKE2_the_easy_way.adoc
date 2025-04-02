@@ -284,6 +284,11 @@ COMMUNITY_REPO=$(helm repo list | egrep "rancher-latest|rancher-stable|rancher-a
 ```
 
 ```bash
+echo ${COMMUNITY_REPO}
+
+```
+
+```bash
 helm repo remove ${COMMUNITY_REPO}
 ```
 
@@ -291,12 +296,22 @@ helm repo remove ${COMMUNITY_REPO}
 helm repo add rancher-prime https://charts.rancher.com/server-charts/prime
 ```
 
+=== Find the version of Rancher Prime you want to install:
+
+```bash
+helm search repo rancher-prime --versions | more
+```
+
+```bash
+RANCHER_PRIME_CHART_VERSION=""
+```
+
 ```bash
 helm get values rancher --namespace cattle-system -o yaml > values.yaml
 ```
 
 ```bash
-helm upgrade rancher rancher-prime/rancher --namespace cattle-system --values values.yaml --version=2.9
+helm upgrade rancher rancher-prime/rancher --namespace cattle-system --values values.yaml --version=${RANCHER_PRIME_CHART_VERSION}
 ```
 
 = Just Installing RKE2
