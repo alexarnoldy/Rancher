@@ -219,10 +219,14 @@ kubectl get pods --namespace cert-manager
 
 == Install the Rancher Helm chart:
 
-NOTE: Adjust the following command to use the `rancher-stable` or `rancher-alpha` repos, if you prefer:
+**FOR COMMUNITY-SUPPORTED RANCHER: Set the following variable to `rancher-latest`, `rancher-stable`, `rancher-alpha`:
 
 ```bash
-helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+RANCHER_REPO=""
+```
+
+```bash
+helm repo add ${RANCHER_REPO} https://releases.rancher.com/server-charts/latest
 ```
 
 * Update your local Helm chart repository cache
@@ -252,7 +256,7 @@ TLS_SOURCE=""         # Leave blank for Rancher Certificates, set to "--set ingr
 Verify the variables before running the helm installation:
 
 ```bash
-echo "RANCHER_CHART_VERSION="${RANCHER_CHART_VERSION}; echo "SET_DEVEL_FLAG="${SET_DEVEL_FLAG}; echo "FQDN="${FQDN}; echo "TLS_SOURCE="${TLS_SOURCE}; echo "BOOTSTRAPPW="${BOOTSTRAPPW}
+echo "RANCHER_REPO="${RANCHER_REPO}; echo "RANCHER_CHART_VERSION="${RANCHER_CHART_VERSION}; echo "SET_DEVEL_FLAG="${SET_DEVEL_FLAG}; echo "FQDN="${FQDN}; echo "TLS_SOURCE="${TLS_SOURCE}; echo "BOOTSTRAPPW="${BOOTSTRAPPW}
 ```
 
 == Install Rancher with Helm
@@ -262,7 +266,7 @@ kubectl create namespace cattle-system
 ```
 
 ```bash
-helm install rancher rancher-latest/rancher --version ${RANCHER_CHART_VERSION} ${SET_DEVEL_FLAG} \
+helm install rancher ${RANCHER_REPO}/rancher --version ${RANCHER_CHART_VERSION} ${SET_DEVEL_FLAG} \
   --namespace cattle-system \
   --set hostname=${FQDN} \
     ${TLS_SOURCE} \
