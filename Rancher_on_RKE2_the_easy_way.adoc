@@ -244,7 +244,7 @@ BOOTSTRAPPW="Rancher4Me"
 === Find the version of Rancher you want to install:
 
 ```bash
-helm search repo rancher-latest --versions | more
+helm search repo ${RANCHER_REPO} --versions | more
 ```
 
 ```bash
