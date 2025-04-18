@@ -263,15 +263,15 @@ helm search repo ${RANCHER_REPO} --versions | more
 ```
 
 ```bash
-RANCHER_CHART_VERSION=""    # CHART VERSION not APP VERSION
 SET_DEVEL_FLAG=""     # Set to --devel for access to development features
 TLS_SOURCE=""         # Leave blank for Rancher Certificates, set to "--set ingress.tls.source=secret" if using External (BYO) Certificates
+RANCHER_CHART_VERSION=""    # CHART VERSION not APP VERSION
 ```
 
-Verify the variables before running the helm installation:
+* Verify the variables before running the helm installation (NOTE that SET_DEVEL_FLAG and TLS_SOURCE will not be set if they are not needed):
 
 ```bash
-echo "RANCHER_REPO="${RANCHER_REPO}; echo "RANCHER_CHART_VERSION="${RANCHER_CHART_VERSION}; echo "SET_DEVEL_FLAG="${SET_DEVEL_FLAG}; echo "FQDN="${FQDN}; echo "TLS_SOURCE="${TLS_SOURCE}; echo "BOOTSTRAPPW="${BOOTSTRAPPW}
+echo; echo "RANCHER_REPO="${RANCHER_REPO}; echo "RANCHER_CHART_VERSION="${RANCHER_CHART_VERSION}; echo "SET_DEVEL_FLAG="${SET_DEVEL_FLAG}; echo "FQDN="${FQDN}; echo "TLS_SOURCE="${TLS_SOURCE}; echo "BOOTSTRAPPW="${BOOTSTRAPPW}
 ```
 
 == Install Rancher with Helm
@@ -297,7 +297,7 @@ watch -c kubectl -n cattle-system get deploy
 
 Log into the Rancher web UI at ${FQDN} and the user `admin` with a password of ${BOOTSTRAPPW}.
 
-== Upgrading to Rancher Prime:
+= Upgrading from community supported Rancher to Rancher Prime:
 
 * Remove the rancher-latest, rancher-stable, or rancher-alpha repo:
 
