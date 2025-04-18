@@ -225,7 +225,7 @@ kubectl get pods --namespace cert-manager
 
 == Install the Rancher Helm chart:
 
-* Select between community-support Rancher and Rancher-Prime. Use only one of the following Helm repo set up procedures:
+=== Select between community-support Rancher and Rancher-Prime. Use only one of the following Helm repo set up procedures:
 
 ** FOR COMMUNITY-SUPPORTED RANCHER: Set the following variable to `rancher-latest`, `rancher-stable`, `rancher-alpha`:
 
