@@ -35,10 +35,10 @@ sudo mkdir -p /etc/rancher/rke2/
 FQDN=""
 ```
 
-== DNS Check
+== DNS Check, should show the public IP associated with the FQDN
 
 ```bash
-nslookup ${FQDN}   # Should show the public IP associated with the FQDN
+getent hosts ${FQDN}
 ```
 
 == Configuration
@@ -74,6 +74,8 @@ sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEA
 sudo systemctl enable --now rke2-server.service
 ```
 
+== Set up the user's home environment to make using kubectl easier 
+
 ```bash
 mkdir -p ${HOME}/.kube
 ```
@@ -94,7 +96,11 @@ echo "export KUBECONFIG=${HOME}/.kube/config" >> ${HOME}/.bashrc
 source ${HOME}/.bashrc
 ```
 
-Verify RKE2 is installed and running correctly:
+```bash
+sudo ln -s /var/lib/rancher/rke2/bin/kubectl /usr/local/bin/kubectl
+```
+
+== Verify RKE2 is installed and running correctly:
 
 ```bash
 watch -c kubectl get pods -A
