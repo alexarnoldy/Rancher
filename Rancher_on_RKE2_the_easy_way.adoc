@@ -240,7 +240,8 @@ helm repo add ${RANCHER_REPO} https://releases.rancher.com/server-charts/latest
 ** FOR RANCHER-PRIME ONLY: Add the Rancher Prime helm repo:
 
 ```bash
-helm repo add rancher-prime https://charts.rancher.com/server-charts/prime
+RANCHER_REPO="rancher-prime"
+helm repo add ${RANCHER_REPO} https://charts.rancher.com/server-charts/prime
 ```
 
 * Update your local Helm chart repository cache
