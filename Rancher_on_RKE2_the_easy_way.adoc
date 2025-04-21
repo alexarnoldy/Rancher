@@ -70,6 +70,8 @@ export RKE2_RELEASE=""
 sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" sh -"
 ```
 
+* Ensure the correct version of RKE2 is downloaded before preeding
+
 ```bash
 sudo systemctl enable --now rke2-server.service
 ```
