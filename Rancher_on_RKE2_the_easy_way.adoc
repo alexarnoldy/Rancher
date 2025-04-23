@@ -125,9 +125,17 @@ sudo ln -s /var/lib/rancher/rke2/bin/kubectl /usr/local/bin/kubectl
 watch -c kubectl get pods -A
 ```
 
-== Post-Installation
+* Ensure etcd lists only the permanently assigned IP address:
 
-Continue after RKE2 is installed and running correctly.
+```bash
+sudo zypper -n in etcdctl
+```
+
+```bash
+sudo ETCDCTL_API=3 etcdctl   --endpoints=https://127.0.0.1:2379   --cacert=/var/lib/rancher/rke2/server/tls/etcd/server-ca.crt   --cert=/var/lib/rancher/rke2/server/tls/etcd/server-client.crt   --key=/var/lib/rancher/rke2/server/tls/etcd/server-client.key   member list
+```
+
+= Continue after RKE2 is installed and running correctly.
 
 === Adding Nodes (Optional)
 
@@ -152,11 +160,19 @@ sudo mkdir -p /etc/rancher/rke2/
 export FIRST_RKE2_NODE=""
 ```
 
+* Set the permanently assigned IP address for this node: 
+
+```bash
+IPADDRESS=""
+```
+
 ```bash
 sudo bash -c "cat <<EOF > /etc/rancher/rke2/config.yaml
 write-kubeconfig-mode: "0644"
 token: RKE2-HA-4-Me
 server: https://${FIRST_RKE2_NODE}:9345
+node-ip: "${IPADDRESS}"
+advertise-address: "${IPADDRESS}"
 EOF"
 ```
 
@@ -294,7 +310,7 @@ RANCHER_CHART_VERSION=""    # CHART VERSION not APP VERSION
 * Verify the variables before running the helm installation (NOTE that SET_DEVEL_FLAG and TLS_SOURCE will not be set if they are not needed):
 
 ```bash
-echo; echo "RANCHER_REPO="${RANCHER_REPO}; echo "RANCHER_CHART_VERSION="${RANCHER_CHART_VERSION}; echo "SET_DEVEL_FLAG="${SET_DEVEL_FLAG}; echo "FQDN="${FQDN}; echo "TLS_SOURCE="${TLS_SOURCE}; echo "BOOTSTRAPPW="${BOOTSTRAPPW}
+echo; echo "RANCHER_REPO="${RANCHER_REPO}; echo "RANCHER_CHART_VERSION="${RANCHER_CHART_VERSION}; echo "FQDN="${FQDN}; echo "BOOTSTRAPPW="${BOOTSTRAPPW}; echo "TLS_SOURCE="${TLS_SOURCE}; echo "SET_DEVEL_FLAG="${SET_DEVEL_FLAG}
 ```
 
 == Install Rancher with Helm
