@@ -38,12 +38,18 @@ sudo mkdir -p /etc/rancher/rke2/
 ```
 
 // Enter your FQDN within the quotes
-.FQDN
-```
+.FQDN and IP
+```bash
 FQDN=""
 ```
 
-== DNS Check, should show the public IP associated with the FQDN
+```bash
+IPADDRESS=""
+```
+
+IMPORTANT: This IP address should be permanently assigned to the host. etcd reacts very badly to IP address changes.
+
+== DNS Check, should show the IP associated with the FQDN
 
 ```bash
 getent hosts ${FQDN}
@@ -57,6 +63,9 @@ write-kubeconfig-mode: "0644"
 token: RKE2-HA-4-Me
 tls-san:
   - "${FQDN}"
+  - "${IPADDRESS}"
+node-ip: "${IPADDRESS}"
+advertise-address: "${IPADDRESS}"
 EOF"
 ```
 
