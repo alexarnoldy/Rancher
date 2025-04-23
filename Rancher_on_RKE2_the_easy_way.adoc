@@ -21,6 +21,10 @@ sudo reboot
 == Environment Setup
 
 ```bash
+echo "source <(kubectl completion bash)" >> ${HOME}/.bashrc
+echo "alias k=kubectl" >> ${HOME}/.bashrc
+echo "complete -o default -F __start_kubectl k" >> ${HOME}/.bashrc
+echo "set -o vi" >> ${HOME}/.bashrc
 echo "export KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> ${HOME}/.bashrc
 echo "PATH=${PATH}:/opt/rke2/bin:/var/lib/rancher/rke2/bin/" >> ${HOME}/.bashrc && source  ${HOME}/.bashrc
 ```
