@@ -298,7 +298,7 @@ BOOTSTRAPPW="Rancher4Me"
 === Find the version of Rancher you want to install:
 
 ```bash
-helm search repo ${RANCHER_REPO} --versions | more
+helm search repo ${RANCHER_REPO} --versions | head
 ```
 
 ```bash
@@ -361,7 +361,7 @@ helm repo add rancher-prime https://charts.rancher.com/server-charts/prime
 === Find the version of Rancher Prime you want to install:
 
 ```bash
-helm search repo rancher-prime --versions | more
+helm search repo rancher-prime --versions | head
 ```
 
 ```bash
