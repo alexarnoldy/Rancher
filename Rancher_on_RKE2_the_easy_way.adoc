@@ -208,6 +208,11 @@ sudo systemctl enable --now rke2-agent.service
 sudo zypper -n in helm
 ```
 
+```bash
+kubectl create namespace cattle-system
+```
+
+
 IMPORTANT: Select only one of "External (Bring Your Own) Certificates" OR "Rancher-generated TLS certificates" for TLS certificate management appropriate for your installation. See https://ranchermanager.docs.rancher.com/getting-started/installation-and-upgrade/install-upgrade-on-a-kubernetes-cluster#3-choose-your-ssl-configuration for more information.
 
 === External (Bring Your Own) Certificates:
@@ -306,6 +311,7 @@ helm search repo ${RANCHER_REPO} --versions | head
 ```
 
 ```bash
+REPLICAS=$(kubectl get nodes | grep -E 'control-plane|master' | wc -l)
 SET_DEVEL_FLAG=""     # Set to --devel for access to development features
 TLS_SOURCE=""         # Leave blank for Rancher Certificates, set to "--set ingress.tls.source=secret" if using External (BYO) Certificates
 RANCHER_CHART_VERSION=""    # CHART VERSION not APP VERSION
@@ -320,15 +326,12 @@ echo; echo "RANCHER_REPO="${RANCHER_REPO}; echo "RANCHER_CHART_VERSION="${RANCHE
 == Install Rancher with Helm
 
 ```bash
-kubectl create namespace cattle-system
-```
-
-```bash
 helm install rancher ${RANCHER_REPO}/rancher --version ${RANCHER_CHART_VERSION} ${SET_DEVEL_FLAG} \
   --namespace cattle-system \
   --set hostname=${FQDN} \
     ${TLS_SOURCE} \
-  --set bootstrapPassword=${BOOTSTRAPPW}
+  --set bootstrapPassword=${BOOTSTRAPPW} \
+  --set replicas=${REPLICAS}
 
 ```
 
