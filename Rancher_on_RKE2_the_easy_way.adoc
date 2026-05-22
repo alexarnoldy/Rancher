@@ -75,16 +75,16 @@ cat /etc/rancher/rke2/config.yaml
 
 == RKE2 Release
 
-Pick a release of RKE2 from: https://github.com/rancher/rke2/releases
+Pick a K8s release (e.g. v1.33) of RKE2 from: https://github.com/rancher/rke2/releases
 
 ```bash
-export RKE2_RELEASE=""
+export INSTALL_RKE2_CHANNEL=""
 ```
 
 == Installation of RKE2
 
 ```bash
-sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_VERSION="${RKE2_RELEASE}" sh -"
+sudo bash -c "curl -sfL https://get.rke2.io | INSTALL_RKE2_CHANNEL="${INSTALL_RKE2_CHANNEL}" sh -"
 ```
 
 NOTE: Ensure the correct version of RKE2 is downloaded before proceeding
