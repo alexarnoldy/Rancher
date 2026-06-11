@@ -28,6 +28,7 @@ echo "set -o vi" >> ${HOME}/.bashrc
 echo "export KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> ${HOME}/.bashrc
 echo "PATH=${PATH}:/opt/rke2/bin:/var/lib/rancher/rke2/bin/" >> ${HOME}/.bashrc && source  ${HOME}/.bashrc
 ```
+NOTE: It is normal to see an error that says "-bash: kubectl: command not found"
 
 IMPORTANT: Ensure /etc/hosts is set up correctly for each node that will be running RKE2.
 
