@@ -76,7 +76,7 @@ cat /etc/rancher/rke2/config.yaml
 
 == RKE2 Release
 
-Pick a K8s release (e.g. v1.33) of RKE2 from: https://github.com/rancher/rke2/releases
+Pick a K8s release (e.g. v1.33) of RKE2 from: https://github.com/rancher/rke2/releases and https://www.suse.com/suse-rancher/support-matrix/all-supported-versions/
 
 ```bash
 export INSTALL_RKE2_CHANNEL=""
