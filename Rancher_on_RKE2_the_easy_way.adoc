@@ -214,7 +214,41 @@ kubectl create namespace cattle-system
 ```
 
 
-IMPORTANT: Select only one of "External (Bring Your Own) Certificates" OR "Rancher-generated TLS certificates" for TLS certificate management appropriate for your installation. See https://ranchermanager.docs.rancher.com/getting-started/installation-and-upgrade/install-upgrade-on-a-kubernetes-cluster#3-choose-your-ssl-configuration for more information.
+IMPORTANT: Select ONLY ONE of the following options:
+1 "Let's Encrypt publicly trusted certificates"
+1 "External (Bring Your Own) Certificates"
+1 "Rancher-generated TLS certificates" for TLS certificate management appropriate for your installation. See https://ranchermanager.docs.rancher.com/getting-started/installation-and-upgrade/install-upgrade-on-a-kubernetes-cluster#3-choose-your-ssl-configuration for more information.
+
+=== Let's Encrypt publicly trusted certificates:
+
+* Follow these instructions to install cert-manager from the Rancher Application Collection (https://apps.rancher.io): https://gist.github.com/alexarnoldy/2ed5d41f77738609a468952e30c42d43
+
+* Create a public DNS record for your server, resolved to its private network IP address. 
+
+* Set the FQDN for the server:
+
+```bash
+export SERVER_FQDN="server.yourdomain.com"
+```
+* Create the TLS certificate:
+
+```bash
+cat <<EOF | kubectl apply -f-
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tls-rancher-ingress
+  namespace: cattle-system
+spec:
+  secretName: tls-rancher-ingress # The secret name that Rancher expects
+  commonName: ${SERVER_FQDN}
+  dnsNames:
+  - ${SERVER_FQDN}
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+EOF
+```
 
 === External (Bring Your Own) Certificates:
 
