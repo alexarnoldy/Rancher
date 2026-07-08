@@ -275,6 +275,7 @@ kubectl -n cattle-system create secret tls tls-rancher-ingress \
 
 === Rancher-generated TLS certificates:
 
+//
 * Add the Jetstack Helm repository:
 
 ```bash
@@ -295,7 +296,34 @@ helm install cert-manager jetstack/cert-manager \
   --create-namespace \
   --set crds.enabled=true
 ```
+//
+* Install cert-manager from the Rancher Application Collection (https://apps.rancher.io): 
 
+** Create the cert-manager namsespace: `kubectl create ns cert-manager`
+
+** Create Service Account tokens or Access tokens
+
+** Use the AppCo examples to:
+
+*** Create the docker-registry secret in the cert-manager namespace
+
+*** Helm login to AppCo (before doing the cert-manager helm install)
+
+** Check for a current version of cert-manager (1.20.2 in this example) at: <https://apps.rancher.io/applications/cert-manager>
+
+```bash
+export CERT_MANAGER_VERSION="1.20.2"
+```
+
+Install the cert-manager chart from AppCo:
+
+```bash
+helm install cert-manager oci://dp.apps.rancher.io/charts/cert-manager \
+  --version ${CERT_MANAGER_VERSION} \
+  --set global.imagePullSecrets={application-collection} \
+  --namespace cert-manager \
+  --set crds.enabled=true
+```
 * Verify the cert-manager installation:
 
 ```bash
