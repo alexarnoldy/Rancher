@@ -213,10 +213,11 @@ sudo zypper -n in helm
 kubectl create namespace cattle-system
 ```
 
+NOTE: If your Rancher Management Server is accessible from the Internet, you can use External, Rancher-managed HTTP-01 TLS certificates or Let's Encrypt certificates using DNS-01 challenge certifictes. If your Rancher Management Server is not accessible from the Internet, you must use External, Let's Encrypt certificates using DNS-01 challenge (requires API tokens for the DNS service), or Rancher-managed private certficates.
 
-IMPORTANT: Select ONLY ONE of the following options: 1) "Let's Encrypt publicly trusted certificates", 2) "External (Bring Your Own) Certificates", 3) "Rancher-generated TLS certificates" for TLS certificate management appropriate for your installation. See https://ranchermanager.docs.rancher.com/getting-started/installation-and-upgrade/install-upgrade-on-a-kubernetes-cluster#3-choose-your-ssl-configuration for more information.
+IMPORTANT: Select ONLY ONE of the following options: 1) "Let's Encrypt publicly trusted certificates using DNS-01 challenge", 2) "External (Bring Your Own) Certificates", 3) "Rancher-managed private or HTTP-01 public TLS certificates" for TLS certificate management appropriate for your installation. See https://ranchermanager.docs.rancher.com/getting-started/installation-and-upgrade/install-upgrade-on-a-kubernetes-cluster#3-choose-your-ssl-configuration for more information.
 
-=== Let's Encrypt publicly trusted certificates using DNS-01 challenge:
+=== 1) Let's Encrypt publicly trusted certificates using DNS-01 challenge:
 
 * Follow these instructions to install cert-manager from the Rancher Application Collection (https://apps.rancher.io): https://gist.github.com/alexarnoldy/2ed5d41f77738609a468952e30c42d43
 
@@ -247,7 +248,7 @@ spec:
 EOF
 ```
 
-=== External (Bring Your Own) Certificates:
+=== 2) External (Bring Your Own) Certificates:
 
 * The following commands assume the public TLS certificate, normally named `fullchain.pem`, exists in the local directory as `tls.crt`, and the associated private key, normally named `privkey.pem`, exists in the local directory as `tls.key`.
 
@@ -270,7 +271,7 @@ kubectl -n cattle-system create secret tls tls-rancher-ingress \
 // source /etc/os-release
 // sudo SUSEConnect -p PackageHub/${VERSION_ID}/x86_64
 
-=== Rancher-generated TLS certificates:
+=== 3) Rancher-managed private or HTTP-01 public TLS certificates:
 
 ////
 * Add the Jetstack Helm repository:
