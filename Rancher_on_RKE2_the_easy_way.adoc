@@ -375,8 +375,12 @@ helm search repo ${RANCHER_REPO} --versions | head
 ```bash
 REPLICAS=$(kubectl get nodes | grep -E 'control-plane|master' | wc -l)
 SET_DEVEL_FLAG=""     # Set to --devel for access to development features
-TLS_SOURCE=""         # Leave blank for Rancher Certificates, set to "--set ingress.tls.source=secret" if using External (BYO) Certificates
 RANCHER_CHART_VERSION=""    # CHART VERSION not APP VERSION
+TLS_SOURCE=""         
+# Set TLS_SOURCE to:
+# "--set ingress.tls.source=rancher" for Rancher-managed Private Certificates, 
+# "--set ingress.tls.source=letsEncrypt" for Rancher-managed HTTP-01 Let's Encrypt Certificates,
+# "--set ingress.tls.source=secret" for External (BYO) Certificates or Let's Encrypt DNS-01 challenge Certificates
 ```
 
 * Verify the variables before running the helm installation (NOTE that SET_DEVEL_FLAG and TLS_SOURCE will not be set if they are not needed):
