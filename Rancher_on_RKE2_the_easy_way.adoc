@@ -214,10 +214,7 @@ kubectl create namespace cattle-system
 ```
 
 
-IMPORTANT: Select ONLY ONE of the following options:
-1 "Let's Encrypt publicly trusted certificates"
-1 "External (Bring Your Own) Certificates"
-1 "Rancher-generated TLS certificates" for TLS certificate management appropriate for your installation. See https://ranchermanager.docs.rancher.com/getting-started/installation-and-upgrade/install-upgrade-on-a-kubernetes-cluster#3-choose-your-ssl-configuration for more information.
+IMPORTANT: Select ONLY ONE of the following options: 1) "Let's Encrypt publicly trusted certificates", 2) "External (Bring Your Own) Certificates", 3) "Rancher-generated TLS certificates" for TLS certificate management appropriate for your installation. See https://ranchermanager.docs.rancher.com/getting-started/installation-and-upgrade/install-upgrade-on-a-kubernetes-cluster#3-choose-your-ssl-configuration for more information.
 
 === Let's Encrypt publicly trusted certificates using DNS-01 challenge:
 
