@@ -41,7 +41,7 @@ sudo mkdir -p /etc/rancher/rke2/
 // Enter your FQDN within the quotes
 .FQDN and IP
 ```bash
-FQDN=""
+SERVER_FQDN=""
 ```
 
 ```bash
@@ -53,7 +53,7 @@ IMPORTANT: This IP address should be permanently assigned to the host. etcd reac
 == DNS Check, should show the IP associated with the FQDN
 
 ```bash
-getent hosts ${FQDN}
+getent hosts ${SERVER_FQDN}
 ```
 
 == Configuration
@@ -63,7 +63,7 @@ sudo bash -c "cat <<EOF > /etc/rancher/rke2/config.yaml
 write-kubeconfig-mode: "0644"
 token: RKE2-HA-4-Me
 tls-san:
-  - "${FQDN}"
+  - "${SERVER_FQDN}"
   - "${IPADDRESS}"
 node-ip: "${IPADDRESS}"
 advertise-address: "${IPADDRESS}"
@@ -386,7 +386,7 @@ TLS_SOURCE=""
 * Verify the variables before running the helm installation (NOTE that SET_DEVEL_FLAG and TLS_SOURCE will not be set if they are not needed):
 
 ```bash
-echo; echo "RANCHER_REPO="${RANCHER_REPO}; echo "RANCHER_CHART_VERSION="${RANCHER_CHART_VERSION}; echo "FQDN="${FQDN}; echo "BOOTSTRAPPW="${BOOTSTRAPPW}; echo "TLS_SOURCE="${TLS_SOURCE}; echo "SET_DEVEL_FLAG="${SET_DEVEL_FLAG}; echo "REPLICAS="${REPLICAS}
+echo; echo "RANCHER_REPO="${RANCHER_REPO}; echo "RANCHER_CHART_VERSION="${RANCHER_CHART_VERSION}; echo "SERVER_FQDN="${SERVER_FQDN}; echo "BOOTSTRAPPW="${BOOTSTRAPPW}; echo "TLS_SOURCE="${TLS_SOURCE}; echo "SET_DEVEL_FLAG="${SET_DEVEL_FLAG}; echo "REPLICAS="${REPLICAS}
 ```
 
 == Install Rancher with Helm
@@ -394,7 +394,7 @@ echo; echo "RANCHER_REPO="${RANCHER_REPO}; echo "RANCHER_CHART_VERSION="${RANCHE
 ```bash
 helm install rancher ${RANCHER_REPO}/rancher --version ${RANCHER_CHART_VERSION} ${SET_DEVEL_FLAG} \
   --namespace cattle-system \
-  --set hostname=${FQDN} \
+  --set hostname=${SERVER_FQDN} \
     ${TLS_SOURCE} \
   --set bootstrapPassword=${BOOTSTRAPPW} \
   --set replicas=${REPLICAS}
@@ -407,7 +407,7 @@ helm install rancher ${RANCHER_REPO}/rancher --version ${RANCHER_CHART_VERSION} 
 watch -c kubectl -n cattle-system get deploy
 ```
 
-Log into the Rancher web UI at ${FQDN} and the user `admin` with a password of ${BOOTSTRAPPW}.
+Log into the Rancher web UI at ${SERVER_FQDN} and the user `admin` with a password of ${BOOTSTRAPPW}.
 
 = Upgrading from community supported Rancher to Rancher Prime:
 
