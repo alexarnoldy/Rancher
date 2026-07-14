@@ -363,7 +363,7 @@ helm repo update
 === Set the Bootstrap Password
 
 ```bash
-BOOTSTRAPPW="Rancher4Me"  
+BOOTSTRAPPW="SUSERancher4Me!"  
 ```
 
 === Find the version of Rancher you want to install:
